@@ -1,0 +1,55 @@
+#### MinerTrack Config - language.yml ##################################################
+#
+#     Hi, welcome to use MinerTrack anti-xray, this is language.yml, which is used
+#  to define the display language of anti-xray. Here you can define what message
+#  the anti-xray displays.
+#
+#  - If you encounter any problems, please go to our official Discord
+#  group for help: https://discord.gg/H3PM8U3y
+#
+#  Anyway, thanks for using MinerTrack anti-xray! ❤
+#
+#####################################################################################
+
+# You can define the message prefix here
+prefix: '&8[&9&lMiner&c&lTrack&8]&r '
+
+# Define the announcement message after the player is kicked out by anti-xraying
+kick-format: '&b%player% &7kicked out of the server for allegedly using X-Ray!'
+
+# Define the verbose message format
+verbose-format: '&7%player% failed X-Ray check &7VL:%vl%&b(+%add_vl%) &7Block:&6%block_type%&ex%count% &7Pos: X%pos_x% Y%pos_y% Z%pos_z%'
+
+# Should MinerTrack broadcast a message when a player is kicked?
+kick-broadcast: true
+
+help:
+  - "&8----[&9&lMiner&c&lTrack &6Help&8]-----------"
+  - ""
+  - "&f/mtrack notify <message> &7- Send alerts to staff"
+  - "&f/mtrack verbose &7- Turn on Detailed Mode, and send a notification to the staff who have Detailed Mode enabled whenever the player's VL increases"
+  - "&f/mtrack check <player> &7- Check player's history of violations"
+  - "&f/mtrack reset <player> &7- Reset player's violation record"
+  - "&f/mtrack help &7- Get plugin's help"
+  - "&f/mtrack update &7- Check update"
+  - "&f/mtrack kick <player> <reason> &7- Kick the player with a specified reason"
+  
+no-permission: "&cYou do not have permission to use this command."
+
+usage-notify: "&cUsage: /mtrack notify <message>"
+usage-check: "&cUsage: /mtrack check <player>"
+usage-reset: "&cUsage: /mtrack reset <player>"
+usage-kick: "&cUsage: /mtrack kick <player> <reason>"
+
+reset-success: "&aSuccessfully reset {player}'s violation record."
+
+violation-level: "&e{player}'s violation level is {level}."
+
+player-not-found: "&cPlayer {player} not found."
+
+config-reloaded: "&aConfiguration reloaded successfully."
+
+unknown-command: "&cUnknown subcommand. Use /mtrack help for a list of commands."
+
+verbose-enable: '&7Verbose Mode &aEnabled&7!'
+verbose-disable: '&7Verbose Mode &cDisabled&7!'
