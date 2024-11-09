@@ -17,11 +17,11 @@ import java.util.*;
 
 public class MiningListener implements Listener {
     private final MinerTrack plugin;
-    private final Map<UUID, List<Location>> miningPath = new HashMap<>();
+    private final Map<UUID, Map<String, List<Location>>> miningPath = new HashMap<>();
     private final Map<UUID, Long> lastMiningTime = new HashMap<>();
     private final Map<UUID, Integer> violationLevel = new HashMap<>();
     private final Map<UUID, Integer> minedVeinCount = new HashMap<>();
-    private final Map<UUID, Location> lastVeinLocation = new HashMap<>();
+    private final Map<UUID, Map<String, Location>> lastVeinLocation = new HashMap<>();
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
     private final Set<Location> explosionExposedOres = new HashSet<>(); // Track ores exposed by explosions
 
@@ -92,8 +92,13 @@ public class MiningListener implements Listener {
             int traceBackLength = plugin.getConfig().getInt("xray.trace_back_length", 10) * 60000;
             int maxPathLength = plugin.getConfig().getInt("xray.max_path_length", 500);
 
-            miningPath.putIfAbsent(playerId, new ArrayList<>());
-            List<Location> path = miningPath.get(playerId);
+            // Initialize the mining path for each player if absent
+            miningPath.putIfAbsent(playerId, new HashMap<String, List<Location>>()); // Explicitly define the generic type here
+            Map<String, List<Location>> worldPaths = miningPath.get(playerId);
+
+            // Initialize the path for the player's current world if absent
+            worldPaths.putIfAbsent(worldName, new ArrayList<>());
+            List<Location> path = worldPaths.get(worldName);
 
             if (lastMiningTime.containsKey(playerId) && (currentTime - lastMiningTime.get(playerId)) > traceBackLength) {
                 path.clear();
@@ -107,9 +112,10 @@ public class MiningListener implements Listener {
                 path.remove(0);
             }
 
-            if (isNewVein(playerId, blockLocation, blockType)) {
+            if (isNewVein(playerId, worldName, blockLocation, blockType)) {
                 minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
-                lastVeinLocation.put(playerId, blockLocation);
+                lastVeinLocation.putIfAbsent(playerId, new HashMap<String, Location>());
+                lastVeinLocation.get(playerId).put(worldName, blockLocation);
             }
 
             if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path) && !player.hasPermission("minertrack.bypass")) {
@@ -118,9 +124,18 @@ public class MiningListener implements Listener {
         }
     }
 
-    private boolean isNewVein(UUID playerId, Location location, Material oreType) {
-        Location lastLocation = lastVeinLocation.get(playerId);
-        return lastLocation == null || lastLocation.distance(location) > 5 || !lastLocation.getBlock().getType().equals(oreType);
+    private boolean isNewVein(UUID playerId, String worldName, Location location, Material oreType) {
+        Map<String, Location> lastLocations = lastVeinLocation.getOrDefault(playerId, new HashMap<String, Location>());
+        Location lastLocation = lastLocations.get(worldName);
+
+        // Check if the player is in the same world before calculating distance
+        if (lastLocation == null || !lastLocation.getWorld().equals(location.getWorld()) || lastLocation.distance(location) > 5 || !lastLocation.getBlock().getType().equals(oreType)) {
+            // Update last locations for each world
+            lastLocations.put(worldName, location);
+            lastVeinLocation.put(playerId, lastLocations);
+            return true;
+        }
+        return false;
     }
 
     private boolean isInCaveWithAir(Location location) {
