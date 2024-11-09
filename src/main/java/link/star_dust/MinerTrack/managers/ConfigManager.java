@@ -101,4 +101,12 @@ public class ConfigManager {
             plugin.getLogger().severe("Could not reload configuration: " + e.getMessage());
         }
     }
+
+    public String getCommandForThreshold(int threshold) {
+        ConfigurationSection commandsSection = config.getConfigurationSection("commands");
+        if (commandsSection != null && commandsSection.contains(String.valueOf(threshold))) {
+            return commandsSection.getString(String.valueOf(threshold));
+        }
+        return null;
+    }
 }
