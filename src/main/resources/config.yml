@@ -33,10 +33,16 @@ xray:
   # At what height should I start detecting X-Ray?
   # Worlds that are not listed do not have XRay detection.
   worlds:
-    world_nether:
-      max-height: 128
     world:
+      enable: true
       max-height: 64
+    world_nether:
+      enable: true
+      max-height: 128
+    world_the_end:
+      enable: false
+    all_unnamed_world:
+      enable: false
 
   
   # The type of ore a player has to mine before being able to be checked

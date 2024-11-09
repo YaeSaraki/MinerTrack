@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.util.Vector;
 
@@ -54,15 +55,19 @@ public class MiningListener implements Listener {
         Location blockLocation = event.getBlock().getLocation();
         List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
 
-        if (placedOres.containsKey(playerId) && placedOres.get(playerId).remove(blockLocation)) {
-            return;
+        // Check if detection is enabled for the player's world
+        String worldName = player.getWorld().getName();
+        if (!plugin.getConfigManager().isWorldDetectionEnabled(worldName)) {
+            return; // Detection is disabled for this world
         }
 
-        int maxHeight = plugin.getConfigManager().getMaxHeight(player.getWorld().getName());
+        // Check if the block height exceeds max height for detection
+        int maxHeight = plugin.getConfigManager().getWorldMaxHeight(worldName);
         if (maxHeight != -1 && blockLocation.getY() > maxHeight) {
             return;
         }
 
+        // Proceed with X-Ray detection if the broken block is a rare ore
         if (rareOres.contains(blockType.name())) {
             long currentTime = System.currentTimeMillis();
             int traceBackLength = plugin.getConfig().getInt("xray.trace_back_length", 10) * 60000;

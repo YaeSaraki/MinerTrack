@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import link.star_dust.MinerTrack.managers.ConfigManager;
 import link.star_dust.MinerTrack.managers.LanguageManager;
+import link.star_dust.MinerTrack.managers.UpdateManager;
 import link.star_dust.MinerTrack.managers.ViolationManager;
 import link.star_dust.MinerTrack.listeners.MiningListener;
 import link.star_dust.MinerTrack.commands.*;
@@ -37,6 +38,7 @@ public class MinerTrack extends JavaPlugin {
     private Notifier notifier;
     private final Set<UUID> verbosePlayers = new HashSet<>();
     private boolean verboseConsole = false;
+    private UpdateManager updateManager;
 
     @Override
     public void onEnable() {
@@ -45,7 +47,7 @@ public class MinerTrack extends JavaPlugin {
         languageManager = new LanguageManager(this);
         violationManager = new ViolationManager(this);
         notifier = new Notifier(this);
-        int traceBackLength = getConfig().getInt("traceBackLength", 10); // 默认值为 10
+        updateManager = new UpdateManager(this);
         
         int pluginId = 23790;
         new Metrics(this, pluginId);
@@ -57,7 +59,9 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
         getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &aEnabled!"));
         getServer().getConsoleSender().sendMessage(applyColors(""));
-        getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your trust!"));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors(""));
+        getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
         
         checkForUpdates();
@@ -131,73 +135,14 @@ public class MinerTrack extends JavaPlugin {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        
-        // 仅当玩家拥有更新检查权限时执行
-        if (player.hasPermission("minertrack.checkupdate")) {
-            String latestVersion = getLatestVersionFromSpigot();
-            String currentVersion = getDescription().getVersion();
 
-            // 如果存在新版本，向玩家发送更新消息
-            if (latestVersion != null && !currentVersion.equals(latestVersion)) {
-                String updateMessage = languageManager.getPrefixedMessage("update-available").replace("{version}", latestVersion);
-                player.sendMessage(languageManager.applyColors(updateMessage));
-            }
+        if (player.hasPermission("minertrack.checkupdate")) {
+            updateManager.checkForUpdates(player);  // Call UpdateManager for player-specific check
         }
     }
 
     public void checkForUpdates() {
-        // 检查配置文件中是否启用更新检查
-        if (!getConfig().getBoolean("update-checker", true)) {
-            return;
-        }
-
-        String currentVersion = getDescription().getVersion();
-        String latestVersion = getLatestVersionFromSpigot();
-
-        // 如果未获取到最新版本或当前版本已是最新，不执行任何操作
-        if (latestVersion == null || currentVersion == latestVersion) {
-            return;
-        }
-        
-        String updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &aNew version " + latestVersion + " now available!";
-
-        // 向控制台发送更新可用消息
-        getServer().getConsoleSender().sendMessage(languageManager.applyColors(updateMessage));
-
-        // 通知所有具有更新检查权限的在线玩家
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.hasPermission("playerdata.checkupdate")) {
-                player.sendMessage(languageManager.applyColors(updateMessage));
-            }
-        }
-    }
-
-    private String getLatestVersionFromSpigot() {
-        try {
-            URL url = new URL("https://api.spigotmc.org/simple/0.2/index.php?action=getResource&id=120562");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-
-            // 读取响应内容
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-            // 从JSON响应中提取"current_version"
-            JSONObject jsonResponse = new JSONObject(response.toString());
-            return jsonResponse.getString("current_version");
-
-        } catch (IOException | org.json.JSONException e) {
-            getLogger().warning("Failed to check for updates: " + e.getMessage());
-            return null;
-        }
+        updateManager.checkForUpdates(null);
     }
 
     @Override
@@ -205,6 +150,8 @@ public class MinerTrack extends JavaPlugin {
     	getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
     	getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &cDisabled!"));
     	getServer().getConsoleSender().sendMessage(applyColors(""));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors(""));
     	getServer().getConsoleSender().sendMessage(applyColors("&a&oGood bye!"));
     	getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
     }

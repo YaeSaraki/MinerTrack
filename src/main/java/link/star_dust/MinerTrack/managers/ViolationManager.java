@@ -5,7 +5,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,28 +25,50 @@ public class ViolationManager {
         this.plugin = plugin;
     }
 
-    /**
-     * 获取玩家的当前违规等级
-     */
+    private String getLogFileName() {
+        LocalDate date = LocalDate.now();
+        int dayOfMonth = date.get(ChronoField.DAY_OF_MONTH);
+        String ordinalSuffix = getOrdinalSuffix(dayOfMonth);
+        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "-" + ordinalSuffix + ".log";
+    }
+
+    private String getOrdinalSuffix(int day) {
+        if (day >= 11 && day <= 13) return "th";
+        switch (day % 10) {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
+    }
+
+    private void logViolation(String message) {
+        if (!plugin.getConfig().getBoolean("log_file")) return;
+
+        String fileName = getLogFileName();
+        File logDir = new File(plugin.getDataFolder(), "logs");
+        if (!logDir.exists() && !logDir.mkdirs()) {
+            Bukkit.getLogger().warning("Could not create logs directory for MinerTrack.");
+            return;
+        }
+
+        File logFile = new File(logDir, fileName);
+        try (FileWriter writer = new FileWriter(logFile, true)) {
+            writer.write(message + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public int getViolationLevel(Player player) {
         return violationLevels.getOrDefault(player.getUniqueId(), 0);
     }
 
-    /**
-     * 增加玩家的违规等级
-     * 
-     * @param player 违规玩家
-     * @param amount 增加的违规等级
-     * @param blockType 违规的矿石类型
-     * @param count 矿石数量
-     * @param location 挖掘位置
-     */
     public void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
         UUID playerId = player.getUniqueId();
         int newLevel = getViolationLevel(player) + amount;
         violationLevels.put(playerId, newLevel);
 
-        // 检查是否达到配置文件中指定的命令阈值
         for (String key : plugin.getConfig().getConfigurationSection("xray.commands").getKeys(false)) {
             int threshold = Integer.parseInt(key);
             if (newLevel == threshold) {
@@ -48,7 +78,6 @@ public class ViolationManager {
             }
         }
 
-        // 使用配置文件中的详细模式消息格式
         if (newLevel >= 1) {
             String verboseFormat = plugin.getLanguageManager().getPrefixedMessage("verbose-format");
             String formattedMessage = verboseFormat
@@ -61,7 +90,6 @@ public class ViolationManager {
                 .replace("%pos_y%", String.valueOf(location.getBlockY()))
                 .replace("%pos_z%", String.valueOf(location.getBlockZ()));
 
-            // 向开启详细模式的玩家发送消息
             for (UUID uuid : plugin.getVerbosePlayers()) {
                 Player verbosePlayer = Bukkit.getPlayer(uuid);
                 if (verbosePlayer != null && verbosePlayer.hasPermission("minertrack.verbose")) {
@@ -69,17 +97,17 @@ public class ViolationManager {
                 }
             }
 
-            // 向控制台发送详细信息（如果启用了详细模式）
             if (plugin.isVerboseConsoleEnabled()) {
                 Bukkit.getConsoleSender().sendMessage(formattedMessage);
             }
+
+            // Log the violation if logging is enabled
+            logViolation(formattedMessage);
         }
     }
 
-    /**
-     * 重置玩家的违规等级
-     */
     public void resetViolationLevel(Player player) {
         violationLevels.remove(player.getUniqueId());
     }
 }
+
