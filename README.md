@@ -34,7 +34,9 @@ Compared to other AntiXray solutions:
 - Automatically handle cases when a player's X-Ray violation level reaches a threshold
 - Automatically reduce the violation level when the player's behavior normalizes
 - Analyze player mining paths to detect X-Ray usage
-- Prevent incorrect detection when a player is mining in a cave
+- When the player is mining in a cave, they will not be detected incorrectly
+- When the player digs with bed boom, they are not incorrectly detected.
+- When the player uses fire resistance to find ores in lava, they will not be detected incorrectly.
 - Highly configurable profiles
 
 ![Image](./Images/Commands.png)
