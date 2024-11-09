@@ -109,4 +109,8 @@ public class ConfigManager {
         }
         return null;
     }
+
+	public int getAncientDebrisVeinCountThreshold() {
+		return config.getInt("AncientDebrisVeinCountThreshold", 2);
+	}
 }

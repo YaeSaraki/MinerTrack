@@ -182,16 +182,34 @@ public class MiningListener implements Listener {
                 double distance = currentLocation.distance(lastLocation);
                 totalDistance += distance;
 
-                if (distance > 5) {
+                if (distance > 3) {
                     disconnectedSegments++;
                 }
             }
             lastLocation = currentLocation;
         }
 
+        if (blockType == Material.ANCIENT_DEBRIS) {
+            analyzeAncientDebris(player, path, disconnectedSegments, count, blockLocation);
+        } else {
+            int veinCount = minedVeinCount.getOrDefault(playerId, 0);
+            if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
+                increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
+                minedVeinCount.put(playerId, 0);
+            }
+        }
+    }
+
+    private void analyzeAncientDebris(Player player, List<Location> path, int disconnectedSegments, int count, Location blockLocation) {
+        UUID playerId = player.getUniqueId();
         int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-        if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
-            increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
+
+        int ancientDebrisVeinThreshold = plugin.getConfigManager().getAncientDebrisVeinCountThreshold();
+        int disconnectedThreshold = 1;
+        int vlIncrease = 2;
+
+        if (veinCount > ancientDebrisVeinThreshold && disconnectedSegments > disconnectedThreshold) {
+            increaseViolationLevel(player, vlIncrease, "ANCIENT_DEBRIS", count, blockLocation);
             minedVeinCount.put(playerId, 0);
         }
     }

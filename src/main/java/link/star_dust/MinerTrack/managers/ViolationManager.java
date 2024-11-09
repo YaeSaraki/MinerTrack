@@ -27,14 +27,23 @@ public class ViolationManager {
 
     private String getLogFileName() {
         LocalDate date = LocalDate.now();
-        int dayOfMonth = date.get(ChronoField.DAY_OF_MONTH);
-        String ordinalSuffix = getOrdinalSuffix(dayOfMonth);
-        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "-" + ordinalSuffix + ".log";
+        String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        int index = 1;
+        File logDir = new File(plugin.getDataFolder(), "logs");
+        File logFile;
+
+        do {
+            logFile = new File(logDir, String.format("%s-%d%s.log", formattedDate, index, getOrdinalSuffix(index)));
+            index++;
+        } while (logFile.exists());
+
+        return logFile.getName();
     }
 
-    private String getOrdinalSuffix(int day) {
-        if (day >= 11 && day <= 13) return "th";
-        switch (day % 10) {
+    private String getOrdinalSuffix(int index) {
+        if (index >= 11 && index <= 13) return "th";
+        switch (index % 10) {
             case 1: return "st";
             case 2: return "nd";
             case 3: return "rd";
