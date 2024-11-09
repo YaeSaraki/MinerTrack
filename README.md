@@ -1,8 +1,8 @@
-![MinerTrack Anti-XRay](https://www.spigotmc.org/attachments/overview-png.861154/)
+![MinerTrack Anti-XRay](./Images/MinerTrack.png)
 
 ## MinerTrack Anti-XRay
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861155/)
+![Image](Overview.png)
 
 **MinerTrack** is a plugin that will really help you catch those naughty players using Xray on your server in a **different way** from other Anti-Xray plugins. This plugin doesn't hide ores, as hiding ores requires a lot of resources.
 
@@ -28,7 +28,7 @@ Compared to other AntiXray solutions:
 - MinerTrack has been tested on servers with about 20 simultaneous players, with very few false positives (*default config*).
 - MinerTrack is free.
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861152/)
+![Image](Features.png)
 
 - Detect XRayer
 - Automatically handle cases when a player's X-Ray violation level reaches a threshold
@@ -37,9 +37,8 @@ Compared to other AntiXray solutions:
 - Prevent incorrect detection when a player is mining in a cave
 - Highly configurable profiles
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861150/)
+![Image](Commands.png)
 
-### Commands
 - `/mtrack notify <message>` - Send alerts to staff
 - `/mtrack verbose` - Enable Detailed Mode and notify staff with it enabled whenever a player’s violation level increases
 - `/mtrack check <player>` - Check a player’s violation history
@@ -49,9 +48,8 @@ Compared to other AntiXray solutions:
 - `/mtrack reload` - Reload the plugin’s configuration
 - `/mtrack update` - Check for plugin updates
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861156/)
+![Image](Permissions.png)
 
-### Permissions
 - `minertrack.bypass` - Bypass X-Ray detection
 - `minertrack.notify` - Receive notifications and verbose information
 - `minertrack.checkupdate` - Receive update information and use `/mtrack update`
@@ -64,20 +62,19 @@ Compared to other AntiXray solutions:
 - `minertrack.verbose` - Use `/mtrack verbose`
 - `minertrack.reload` - Use `/mtrack reload`
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861153/)
+![Image](Installation.png)
 
-### Installation
 1. Download the latest version of **MinerTrack** from SpigotMC.
 2. Place the .jar file into the plugins folder.
 3. Restart the server to generate the configuration and necessary files.
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861163/)
+![Image](Requirements.png)
 
 ### Requirements
 - Java 17 or higher
 - Spigot, Paper, Folia, or compatible forks (1.18 or newer)
 
-![Image](https://www.spigotmc.org/attachments/overview-png.861157/)
+![Image](Support.png)
 
 If you encounter any issues or have suggestions for new features, feel free to reach out via SpigotMC or open an issue on the plugin’s GitHub repository.
 **Our Discord: [https://discord.gg/nvW5SrtW](https://discord.gg/H3PM8U3y)**
