@@ -76,6 +76,7 @@ Compared to other AntiXray solutions:
 ![Image](./Images/Support.png)
 
 If you encounter any issues or have suggestions for new features, feel free to reach out via SpigotMC or open an issue on the plugin’s GitHub repository.
+
 **Our Discord: [https://discord.gg/nvW5SrtW](https://discord.gg/H3PM8U3y)**
 
 ---
