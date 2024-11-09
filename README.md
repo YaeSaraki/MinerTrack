@@ -70,7 +70,6 @@ Compared to other AntiXray solutions:
 
 ![Image](./Images/Requirements.png)
 
-### Requirements
 - Java 17 or higher
 - Spigot, Paper, Purpur or compatible forks (1.18 or newer)
 
