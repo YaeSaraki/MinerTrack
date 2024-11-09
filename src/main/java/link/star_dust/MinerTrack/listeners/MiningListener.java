@@ -23,6 +23,7 @@ public class MiningListener implements Listener {
     private final Map<UUID, Integer> minedVeinCount = new HashMap<>();
     private final Map<UUID, Location> lastVeinLocation = new HashMap<>();
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
+    private final Set<Location> explosionExposedOres = new HashSet<>(); // Track ores exposed by explosions
 
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
@@ -48,6 +49,18 @@ public class MiningListener implements Listener {
     }
 
     @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
+
+        // Record locations of exposed rare ores
+        for (var block : event.blockList()) {
+            if (rareOres.contains(block.getType().name())) {
+                explosionExposedOres.add(block.getLocation());
+            }
+        }
+    }
+
+    @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
@@ -64,6 +77,12 @@ public class MiningListener implements Listener {
         // Check if the block height exceeds max height for detection
         int maxHeight = plugin.getConfigManager().getWorldMaxHeight(worldName);
         if (maxHeight != -1 && blockLocation.getY() > maxHeight) {
+            return;
+        }
+
+        // Ignore ores exposed by explosions
+        if (explosionExposedOres.contains(blockLocation)) {
+            explosionExposedOres.remove(blockLocation); // Remove after ignoring to avoid reusing
             return;
         }
 
@@ -101,7 +120,6 @@ public class MiningListener implements Listener {
 
     private boolean isNewVein(UUID playerId, Location location, Material oreType) {
         Location lastLocation = lastVeinLocation.get(playerId);
-
         return lastLocation == null || lastLocation.distance(location) > 5 || !lastLocation.getBlock().getType().equals(oreType);
     }
 
@@ -169,6 +187,3 @@ public class MiningListener implements Listener {
         plugin.getViolationManager().increaseViolationLevel(player, amount, blockType, count, location);
     }
 }
-
-
-
