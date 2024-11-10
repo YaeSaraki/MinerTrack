@@ -1,7 +1,8 @@
 name: MinerTrack
-version: 1.4.4-beta
+version: 1.4.5-beta
 main: link.star_dust.MinerTrack.MinerTrack
 api-version: 1.18
+folia-supported: true
 description: The Advanced Anti-Xray that you need, have you ever dreamed of a powerful anti-xray?
 commands:
   minertrack:
