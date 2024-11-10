@@ -61,11 +61,13 @@ xray:
   # Mined length record limit (Unit: block)
   max_path_length: 500
   
-  # Violation threshold
   caveBypassAirCount: 10
-  turnCountThreshold: 10
-  veinCountThreshold: 3
-  AncientDebrisVeinCountThreshold: 2
+  
+  # Violation threshold
+  ViolationThreshold:
+    turnCountThreshold: 10
+    veinCountThreshold: 3
+    AncientDebrisVeinCountThreshold: 2
 
   # Violation level decay settings (Unit: minute)
   decay:

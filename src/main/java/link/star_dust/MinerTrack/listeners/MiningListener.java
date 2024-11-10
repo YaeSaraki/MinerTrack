@@ -206,9 +206,10 @@ public class MiningListener implements Listener {
 
         int ancientDebrisVeinThreshold = plugin.getConfigManager().getAncientDebrisVeinCountThreshold();
         int disconnectedThreshold = 1;
-        int vlIncrease = 2;
+        int vlIncrease = 1;
 
         if (veinCount > ancientDebrisVeinThreshold && disconnectedSegments > disconnectedThreshold) {
+            increaseViolationLevel(player, vlIncrease, "ANCIENT_DEBRIS", count, blockLocation);
             increaseViolationLevel(player, vlIncrease, "ANCIENT_DEBRIS", count, blockLocation);
             minedVeinCount.put(playerId, 0);
         }

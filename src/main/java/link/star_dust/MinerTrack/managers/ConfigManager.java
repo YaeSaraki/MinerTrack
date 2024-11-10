@@ -59,11 +59,11 @@ public class ConfigManager {
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("veinCountThreshold", 3);
+        return config.getInt("ViolationThreshold.veinCountThreshold", 3);
     }
 
     public int getTurnCountThreshold() {
-        return config.getInt("turnCountThreshold", 10);
+        return config.getInt("ViolationThreshold.turnCountThreshold", 10);
     }
 
     public int getCaveBypassAirCount() {
@@ -111,6 +111,6 @@ public class ConfigManager {
     }
 
 	public int getAncientDebrisVeinCountThreshold() {
-		return config.getInt("AncientDebrisVeinCountThreshold", 2);
+		return config.getInt("ViolationThreshold.AncientDebrisVeinCountThreshold", 2);
 	}
 }

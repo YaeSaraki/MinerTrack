@@ -20,17 +20,23 @@ import java.util.UUID;
 public class ViolationManager {
     private final MinerTrack plugin;
     private final Map<UUID, Integer> violationLevels = new HashMap<>();
+    private String currentLogFileName;
 
     public ViolationManager(MinerTrack plugin) {
         this.plugin = plugin;
+        this.currentLogFileName = generateLogFileName();
     }
 
-    private String getLogFileName() {
+    private String generateLogFileName() {
         LocalDate date = LocalDate.now();
         String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        int index = 1;
         File logDir = new File(plugin.getDataFolder(), "logs");
+        if (!logDir.exists() && !logDir.mkdirs()) {
+            Bukkit.getLogger().warning("Could not create logs directory for MinerTrack.");
+        }
+
+        int index = 1;
         File logFile;
 
         do {
@@ -39,6 +45,13 @@ public class ViolationManager {
         } while (logFile.exists());
 
         return logFile.getName();
+    }
+
+    private String getLogFileName() {
+        if (currentLogFileName == null) {
+            currentLogFileName = generateLogFileName();
+        }
+        return currentLogFileName;
     }
 
     private String getOrdinalSuffix(int index) {
@@ -56,12 +69,8 @@ public class ViolationManager {
 
         String fileName = getLogFileName();
         File logDir = new File(plugin.getDataFolder(), "logs");
-        if (!logDir.exists() && !logDir.mkdirs()) {
-            Bukkit.getLogger().warning("Could not create logs directory for MinerTrack.");
-            return;
-        }
-
         File logFile = new File(logDir, fileName);
+
         try (FileWriter writer = new FileWriter(logFile, true)) {
             writer.write(message + "\n");
         } catch (IOException e) {
@@ -110,7 +119,6 @@ public class ViolationManager {
                 Bukkit.getConsoleSender().sendMessage(formattedMessage);
             }
 
-            // Log the violation if logging is enabled
             logViolation(formattedMessage);
         }
     }
@@ -119,4 +127,3 @@ public class ViolationManager {
         violationLevels.remove(player.getUniqueId());
     }
 }
-
