@@ -36,7 +36,6 @@ Compared to other AntiXray solutions:
 - Analyze player mining paths to detect X-Ray usage
 - When the player is mining in a cave, they will not be detected incorrectly
 - When the player digs with bed boom, they are not incorrectly detected.
-- When the player uses fire resistance to find ores in lava, they will not be detected incorrectly.
 - Highly configurable profiles
 
 ![Image](./Images/Commands.png)
@@ -79,7 +78,7 @@ Compared to other AntiXray solutions:
 
 If you encounter any issues or have suggestions for new features, feel free to reach out via SpigotMC or open an issue on the plugin’s GitHub repository.
 
-**Our Discord: [https://discord.gg/nvW5SrtW](https://discord.gg/H3PM8U3y)**
+**Our Discord: [https://discord.gg/MzTea2W9cb](https://discord.gg/MzTea2W9cb)**
 
 ---
 
