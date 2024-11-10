@@ -83,6 +83,10 @@ public class ConfigManager {
         return config.getBoolean("xray.worlds." + worldName + ".enable",
                 config.getBoolean("xray.worlds.all_unnamed_world.enable", false));
     }
+    
+    public boolean DisableBypass() {
+        return config.getBoolean("disable_bypass_permission", false);
+    }
 
     // Save only custom (non-default) values to config file
     public void saveCustomConfig() {

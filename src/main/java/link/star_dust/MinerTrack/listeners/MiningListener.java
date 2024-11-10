@@ -118,8 +118,14 @@ public class MiningListener implements Listener {
                 lastVeinLocation.get(playerId).put(worldName, blockLocation);
             }
 
-            if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path) && !player.hasPermission("minertrack.bypass")) {
-                analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
+            	if (!player.hasPermission("minertrack.bypass")) {
+                  analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            	} else if (plugin.getConfigManager().DisableBypass()) {
+            		analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            	} else {
+            		return;
+            	}
             }
         }
     }
