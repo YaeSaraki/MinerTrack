@@ -35,7 +35,6 @@ Compared to other AntiXray solutions:
 - Automatically reduce the violation level when the player's behavior normalizes
 - Analyze player mining paths to detect X-Ray usage
 - When the player is mining in a cave, they will not be detected incorrectly
-- When the player digs with bed boom, they are not incorrectly detected.
 - Highly configurable profiles
 
 ![Image](./Images/Commands.png)
