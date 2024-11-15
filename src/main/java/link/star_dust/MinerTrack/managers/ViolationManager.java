@@ -31,8 +31,8 @@ public class ViolationManager {
     }
 
     private void startViolationDecayTask() {
-        int decayInterval = plugin.getConfig().getInt("decay.interval", 2);
-        int decayAmount = plugin.getConfig().getInt("decay.amount", 1);
+        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 2);
+        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
 
         new BukkitRunnable() {
             @Override

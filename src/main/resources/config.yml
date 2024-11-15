@@ -47,7 +47,6 @@ xray:
       enable: false
     all_unnamed_world:
       enable: false
-
   
   # The type of ore a player has to mine before being able to be checked
   # List of allowed materials: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html

@@ -204,7 +204,7 @@ public class MiningListener implements Listener {
     
     private void checkAndResetPaths() {
         long now = System.currentTimeMillis();
-        long traceRemoveMillis = plugin.getConfig().getInt("trace_remove", 5) * 60 * 1000L; // The configured minutes are converted to milliseconds
+        long traceRemoveMillis = plugin.getConfig().getInt("xray.trace_remove", 5) * 60 * 1000L; // The configured minutes are converted to milliseconds
 
         for (UUID playerId : new HashSet<>(vlZeroTimestamp.keySet())) {
             Long lastZeroTime = vlZeroTimestamp.get(playerId);
