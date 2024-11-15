@@ -61,13 +61,15 @@ xray:
   # Mined length record limit (Unit: block)
   max_path_length: 500
   
-  caveBypassAirCount: 10
+  # Path record is reset after the player VL is 0 {n} minutes.
+  trace_remove: 5
+  
+  caveBypassAirCount: 4
   
   # Violation threshold
   ViolationThreshold:
     turnCountThreshold: 10
     veinCountThreshold: 3
-    AncientDebrisVeinCountThreshold: 2
 
   # Violation level decay settings (Unit: minute)
   decay:
@@ -77,4 +79,5 @@ xray:
   # Commands executed at specified violation thresholds
   commands:
     4: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 4&7]'
-    6: 'minertrack kick %player% X-Ray'
+    6: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 6&7]'
+    8: 'minertrack kick %player% X-Ray'

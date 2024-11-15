@@ -23,10 +23,14 @@ public class MiningListener implements Listener {
     private final Map<UUID, Integer> minedVeinCount = new HashMap<>();
     private final Map<UUID, Map<String, Location>> lastVeinLocation = new HashMap<>();
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
-    private final Set<Location> explosionExposedOres = new HashSet<>(); // Track ores exposed by explosions
+    private final Set<Location> explosionExposedOres = new HashSet<>();
+    private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
 
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
+        
+        int interval = 20 * 60;
+        Bukkit.getScheduler().runTaskTimer(plugin, this::checkAndResetPaths, interval, interval);
     }
 
     @EventHandler
@@ -49,24 +53,20 @@ public class MiningListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
-        List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
-
-        // Record locations of exposed rare ores
-        for (var block : event.blockList()) {
-            if (rareOres.contains(block.getType().name())) {
-                explosionExposedOres.add(block.getLocation());
-            }
-        }
-    }
-
-    @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+    	if (!plugin.getConfig().getBoolean("xray.enable", true)) {
+            return;
+        }
+    	
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
         Location blockLocation = event.getBlock().getLocation();
         List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
+        
+        if (violationLevel.getOrDefault(playerId, 0) == 0) {
+            vlZeroTimestamp.put(playerId, System.currentTimeMillis());
+        }
 
         // Check if detection is enabled for the player's world
         String worldName = player.getWorld().getName();
@@ -124,7 +124,7 @@ public class MiningListener implements Listener {
             	} else if (plugin.getConfigManager().DisableBypass()) {
             		analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
             	} else {
-            		return;
+            		// pass
             	}
             }
         }
@@ -179,7 +179,8 @@ public class MiningListener implements Listener {
     private void analyzeMiningPath(Player player, List<Location> path, Material blockType, int count, Location blockLocation) {
         UUID playerId = player.getUniqueId();
         int disconnectedSegments = 0;
-        double totalDistance = 0.0;
+        @SuppressWarnings("unused")
+		double totalDistance = 0.0;
         Location lastLocation = null;
 
         for (int i = 0; i < path.size(); i++) {
@@ -194,36 +195,31 @@ public class MiningListener implements Listener {
             }
             lastLocation = currentLocation;
         }
-
-        if (blockType == Material.ANCIENT_DEBRIS) {
-            analyzeAncientDebris(player, path, disconnectedSegments, count, blockLocation);
-        } else {
-            int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-            if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
-                increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
-                minedVeinCount.put(playerId, 0);
-            }
+        int veinCount = minedVeinCount.getOrDefault(playerId, 0);
+        if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
+            increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
+            minedVeinCount.put(playerId, 0);
         }
     }
+    
+    private void checkAndResetPaths() {
+        long now = System.currentTimeMillis();
+        long traceRemoveMillis = plugin.getConfig().getInt("trace_remove", 5) * 60 * 1000L; // The configured minutes are converted to milliseconds
 
-    private void analyzeAncientDebris(Player player, List<Location> path, int disconnectedSegments, int count, Location blockLocation) {
-        UUID playerId = player.getUniqueId();
-        int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-
-        int ancientDebrisVeinThreshold = plugin.getConfigManager().getAncientDebrisVeinCountThreshold();
-        int disconnectedThreshold = 1;
-        int vlIncrease = 1;
-
-        if (veinCount > ancientDebrisVeinThreshold && disconnectedSegments > disconnectedThreshold) {
-            increaseViolationLevel(player, vlIncrease, "ANCIENT_DEBRIS", count, blockLocation);
-            increaseViolationLevel(player, vlIncrease, "ANCIENT_DEBRIS", count, blockLocation);
-            minedVeinCount.put(playerId, 0);
+        for (UUID playerId : new HashSet<>(vlZeroTimestamp.keySet())) {
+            Long lastZeroTime = vlZeroTimestamp.get(playerId);
+            if (lastZeroTime != null && now - lastZeroTime > traceRemoveMillis) {
+                miningPath.remove(playerId); // Clear the path record
+                minedVeinCount.remove(playerId); // Reset the vein count
+                vlZeroTimestamp.remove(playerId); // Remove the timestamp that has been processed
+            }
         }
     }
 
     private void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
         UUID playerId = player.getUniqueId();
         violationLevel.put(playerId, violationLevel.getOrDefault(playerId, 0) + amount);
+        vlZeroTimestamp.remove(playerId); // When the violation level increases, remove the timestamp with VL of 0
         plugin.getViolationManager().increaseViolationLevel(player, amount, blockType, count, location);
     }
 }

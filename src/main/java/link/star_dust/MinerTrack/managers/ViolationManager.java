@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class ViolationManager {
     private final MinerTrack plugin;
@@ -25,6 +26,33 @@ public class ViolationManager {
     public ViolationManager(MinerTrack plugin) {
         this.plugin = plugin;
         this.currentLogFileName = generateLogFileName();
+
+        startViolationDecayTask();
+    }
+
+    private void startViolationDecayTask() {
+        int decayInterval = plugin.getConfig().getInt("decay.interval", 2);
+        int decayAmount = plugin.getConfig().getInt("decay.amount", 1);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!plugin.isEnabled()) {
+                    cancel();
+                    return;
+                }
+
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    UUID playerId = player.getUniqueId();
+                    int currentVL = violationLevels.getOrDefault(playerId, 0);
+
+                    if (currentVL > 0) {
+                        int newVL = Math.max(0, currentVL - decayAmount);
+                        violationLevels.put(playerId, newVL);
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, decayInterval * 60L * 20L);
     }
 
     private String generateLogFileName() {
@@ -98,12 +126,15 @@ public class ViolationManager {
 
         if (newLevel >= 1) {
             String verboseFormat = plugin.getLanguageManager().getPrefixedMessage("verbose-format");
+            String worldName = location.getWorld() != null ? location.getWorld().getName() : "unknown";
+
             String formattedMessage = verboseFormat
                 .replace("%player%", player.getName())
                 .replace("%vl%", String.valueOf(newLevel))
                 .replace("%add_vl%", String.valueOf(amount))
                 .replace("%block_type%", blockType)
                 .replace("%count%", String.valueOf(count))
+                .replace("%world%", worldName)
                 .replace("%pos_x%", String.valueOf(location.getBlockX()))
                 .replace("%pos_y%", String.valueOf(location.getBlockY()))
                 .replace("%pos_z%", String.valueOf(location.getBlockZ()));
