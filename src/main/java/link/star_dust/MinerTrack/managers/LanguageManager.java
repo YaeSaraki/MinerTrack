@@ -75,6 +75,10 @@ public class LanguageManager {
     public String getLogFormat() {
         return getMessage("log-format");
     }
+    
+    public boolean isKickBroadcastEnabled() {
+        return languageConfig.getBoolean("kick-broadcast", true);
+    }
 
     // Save only custom values
     private void saveCustomLanguageFile() {

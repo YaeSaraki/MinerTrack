@@ -43,31 +43,31 @@ public class ConfigManager {
     }
 
     public boolean isKickStrikeLightning() {
-        return config.getBoolean("kick-strike-lightning", false);
+        return config.getBoolean("xray.kick-strike-lightning", false);
     }
 
     public List<String> getRareOres() {
-        return config.getStringList("rare-ores");
+        return config.getStringList("xray.rare-ores");
     }
 
     public int getViolationThreshold() {
-        return config.getInt("violation-threshold", 10);
-    }
-
-    public boolean isKickBroadcastEnabled() {
-        return config.getBoolean("kick-broadcast", true);
+        return config.getInt("xray.violation-threshold", 10);
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("ViolationThreshold.veinCountThreshold", 3);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
     }
 
     public int getTurnCountThreshold() {
-        return config.getInt("ViolationThreshold.turnCountThreshold", 10);
+        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 10);
     }
 
     public int getCaveBypassAirCount() {
-        return config.getInt("caveBypassAirCount", 10);
+        return config.getInt("xray.cave-detection.air-threshold", 10);
+    }
+    
+    public int getCaveCheckDetection() {
+        return config.getInt("xray.cave-detection.detection", 3);
     }
 
     public int getWorldMaxHeight(String worldName) {
@@ -107,7 +107,7 @@ public class ConfigManager {
     }
 
     public String getCommandForThreshold(int threshold) {
-        ConfigurationSection commandsSection = config.getConfigurationSection("commands");
+        ConfigurationSection commandsSection = config.getConfigurationSection("xray.commands");
         if (commandsSection != null && commandsSection.contains(String.valueOf(threshold))) {
             return commandsSection.getString(String.valueOf(threshold));
         }

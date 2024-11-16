@@ -19,7 +19,8 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player) || sender instanceof ConsoleCommandSender) {
             // pass
@@ -112,15 +113,30 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("usage-kick"));
                     return true;
                 }
+
                 Player playerToKick = plugin.getServer().getPlayer(args[1]);
                 if (playerToKick != null) {
                     String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+
+                    if (plugin.getConfigManager().isKickStrikeLightning()) {
+                        playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    }
+
+                    if (plugin.getLanguageManager().isKickBroadcastEnabled()) {
+                        String kickMessage = plugin.getLanguageManager().getPrefixedMessage("kick-format")
+                            .replace("%player%", playerToKick.getName())
+                            .replace("%reason%", reason);
+                        plugin.getServer().broadcastMessage(kickMessage);
+                    }
+
                     plugin.getNotifier().kickPlayer(playerToKick, reason);
+
                 } else {
                     sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("player-not-found")
                             .replace("{player}", args[1]));
                 }
                 break;
+
 
             case "reload":
                 if (!sender.hasPermission("minertrack.reload")) {

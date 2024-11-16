@@ -65,14 +65,16 @@ xray:
   max_path_length: 500
   
   # Information is removed after {n} seconds after the mineral is exposed to the explosion
-  explosion_retention_time: 300
+  explosion_retention_time: 600
   
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 10
   
-  # Think they're in a cave when there are how many cave air is around the player? (5x5x5)
-  caveBypassAirCount: 2
-  
+  # Cave Detection
+  cave-detection:
+    air-threshold: 4
+    detection-range: 3 # Detection range (3 = 7x7x7)
+
   # Violation threshold
   ViolationThreshold:
     turnCountThreshold: 10
