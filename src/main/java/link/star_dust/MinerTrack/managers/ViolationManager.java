@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.HashMap;
@@ -79,12 +80,13 @@ public class ViolationManager {
         String logFormat = plugin.getLanguageManager().getLogFormat();
         String worldName = location.getWorld() != null ? location.getWorld().getName() : "unknown";
 
-        String year = String.valueOf(LocalDate.now().getYear());
-        String month = String.format("%02d", LocalDate.now().getMonthValue());
-        String day = String.format("%02d", LocalDate.now().getDayOfMonth());
-        String hour = String.format("%02d", LocalDate.now().get(ChronoField.HOUR_OF_DAY));
-        String minute = String.format("%02d", LocalDate.now().get(ChronoField.MINUTE_OF_HOUR));
-        String second = String.format("%02d", LocalDate.now().get(ChronoField.SECOND_OF_MINUTE));
+        LocalDateTime now = LocalDateTime.now();
+        String year = String.valueOf(now.getYear());
+        String month = String.format("%02d", now.getMonthValue());
+        String day = String.format("%02d", now.getDayOfMonth());
+        String hour = String.format("%02d", now.getHour());
+        String minute = String.format("%02d", now.getMinute());
+        String second = String.format("%02d", now.getSecond());
 
         String formattedMessage = logFormat
             .replace("%year%", year)
@@ -113,6 +115,7 @@ public class ViolationManager {
             e.printStackTrace();
         }
     }
+
 
     public int getViolationLevel(Player player) {
         return violationLevels.getOrDefault(player.getUniqueId(), 0);

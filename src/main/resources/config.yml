@@ -64,6 +64,9 @@ xray:
   # Mined length record limit (Unit: block)
   max_path_length: 500
   
+  # Information is removed after {n} seconds after the mineral is exposed to the explosion
+  explosion_retention_time: 300
+  
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 10
   

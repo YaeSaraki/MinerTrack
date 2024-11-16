@@ -25,7 +25,7 @@ public class MiningListener implements Listener {
     private final Map<UUID, Integer> minedVeinCount = new HashMap<>();
     private final Map<UUID, Map<String, Location>> lastVeinLocation = new HashMap<>();
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
-    private final Set<Location> explosionExposedOres = new HashSet<>();
+    private final Map<Location, Long> explosionExposedOres = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
 
     public MiningListener(MinerTrack plugin) {
@@ -40,12 +40,12 @@ public class MiningListener implements Listener {
                     return;
                 }
                 checkAndResetPaths();
+                cleanupExplosionExposedOres(); // Periodically clean up explosion-exposed ores
             }, interval, interval);
         } else {
             // Use reflection to call the Spigot scheduling logic
             try {
                 Class<?> schedulerClass = Bukkit.getScheduler().getClass();
-                // Get runTaskTimer method
                 java.lang.reflect.Method runTaskTimer = schedulerClass.getMethod(
                     "runTaskTimer",
                     Plugin.class,
@@ -56,7 +56,10 @@ public class MiningListener implements Listener {
 
                 Object[] params = {
                     plugin,
-                    (Runnable) this::checkAndResetPaths,
+                    (Runnable) () -> {
+                        checkAndResetPaths();
+                        cleanupExplosionExposedOres();
+                    },
                     (long) interval,
                     (long) interval
                 };
@@ -91,83 +94,106 @@ public class MiningListener implements Listener {
             placedOres.get(playerId).add(event.getBlock().getLocation());
         }
     }
+    
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        // Record all ore locations exposed by the explosion
+        List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
+        long currentTime = System.currentTimeMillis();
+        int retentionTime = plugin.getConfig().getInt("xray.explosion_retention_time", 300) * 1000; // Default 5 minutes
+
+        for (var block : event.blockList()) {
+            if (rareOres.contains(block.getType().name())) {
+                explosionExposedOres.put(block.getLocation(), currentTime + retentionTime);
+            }
+        }
+    }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-    	if (!plugin.getConfig().getBoolean("xray.enable", true)) {
+        if (!plugin.getConfig().getBoolean("xray.enable", true)) {
             return;
         }
-    	
+
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
         Location blockLocation = event.getBlock().getLocation();
         List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
-        
-        if (violationLevel.getOrDefault(playerId, 0) == 0) {
-            vlZeroTimestamp.put(playerId, System.currentTimeMillis());
+
+        if (!player.hasPermission("minertrack.bypass") || player.hasPermission("minertrack.bypass") && plugin.getConfigManager().DisableBypass()) {
+        	if (violationLevel.getOrDefault(playerId, 0) == 0) {
+        		vlZeroTimestamp.put(playerId, System.currentTimeMillis());
+        	}
+
+        	// Check if detection is enabled for the player's world
+        	String worldName = player.getWorld().getName();
+        	if (!plugin.getConfigManager().isWorldDetectionEnabled(worldName)) {
+        		return; // Detection is disabled for this world
+        	}
+
+        	// Check if the block height exceeds max height for detection
+        	int maxHeight = plugin.getConfigManager().getWorldMaxHeight(worldName);
+        	if (maxHeight != -1 && blockLocation.getY() > maxHeight) {
+        		return;
+        	}
+
+        	// Ignore ores exposed by explosions within the retention time
+        	if (explosionExposedOres.containsKey(blockLocation)) {
+        		long expirationTime = explosionExposedOres.get(blockLocation);
+        		if (System.currentTimeMillis() < expirationTime) {
+        			return;
+        		} else {
+        			explosionExposedOres.remove(blockLocation); // Remove expired entry
+        		}
+        	}
+
+        	// Proceed with X-Ray detection if the broken block is a rare ore
+        	if (rareOres.contains(blockType.name())) {
+        		handleXRayDetection(player, blockType, blockLocation);
+        	}
+        }
+    }
+
+    private void handleXRayDetection(Player player, Material blockType, Location blockLocation) {
+        UUID playerId = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+        int traceBackLength = plugin.getConfig().getInt("xray.trace_back_length", 10) * 60000;
+        int maxPathLength = plugin.getConfig().getInt("xray.max_path_length", 500);
+
+        miningPath.putIfAbsent(playerId, new HashMap<>());
+        Map<String, List<Location>> worldPaths = miningPath.get(playerId);
+        String worldName = blockLocation.getWorld().getName();
+
+        worldPaths.putIfAbsent(worldName, new ArrayList<>());
+        List<Location> path = worldPaths.get(worldName);
+
+        if (lastMiningTime.containsKey(playerId) && (currentTime - lastMiningTime.get(playerId)) > traceBackLength) {
+            path.clear();
+            minedVeinCount.put(playerId, 0);
         }
 
-        // Check if detection is enabled for the player's world
-        String worldName = player.getWorld().getName();
-        if (!plugin.getConfigManager().isWorldDetectionEnabled(worldName)) {
-            return; // Detection is disabled for this world
+        path.add(blockLocation);
+        lastMiningTime.put(playerId, currentTime);
+
+        if (path.size() > maxPathLength) {
+            path.remove(0);
         }
 
-        // Check if the block height exceeds max height for detection
-        int maxHeight = plugin.getConfigManager().getWorldMaxHeight(worldName);
-        if (maxHeight != -1 && blockLocation.getY() > maxHeight) {
-            return;
+        if (isNewVein(playerId, worldName, blockLocation, blockType)) {
+            minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
+            lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
+            lastVeinLocation.get(playerId).put(worldName, blockLocation);
         }
 
-        // Ignore ores exposed by explosions
-        if (explosionExposedOres.contains(blockLocation)) {
-            explosionExposedOres.remove(blockLocation); // Remove after ignoring to avoid reusing
-            return;
+        if (!isInCaveWithAir(blockLocation) || !isSmoothPath(path)) {
+            analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
+    }
 
-        // Proceed with X-Ray detection if the broken block is a rare ore
-        if (rareOres.contains(blockType.name())) {
-            long currentTime = System.currentTimeMillis();
-            int traceBackLength = plugin.getConfig().getInt("xray.trace_back_length", 10) * 60000;
-            int maxPathLength = plugin.getConfig().getInt("xray.max_path_length", 500);
-
-            // Initialize the mining path for each player if absent
-            miningPath.putIfAbsent(playerId, new HashMap<String, List<Location>>()); // Explicitly define the generic type here
-            Map<String, List<Location>> worldPaths = miningPath.get(playerId);
-
-            // Initialize the path for the player's current world if absent
-            worldPaths.putIfAbsent(worldName, new ArrayList<>());
-            List<Location> path = worldPaths.get(worldName);
-
-            if (lastMiningTime.containsKey(playerId) && (currentTime - lastMiningTime.get(playerId)) > traceBackLength) {
-                path.clear();
-                minedVeinCount.put(playerId, 0);
-            }
-
-            path.add(blockLocation);
-            lastMiningTime.put(playerId, currentTime);
-
-            if (path.size() > maxPathLength) {
-                path.remove(0);
-            }
-
-            if (isNewVein(playerId, worldName, blockLocation, blockType)) {
-                minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
-                lastVeinLocation.putIfAbsent(playerId, new HashMap<String, Location>());
-                lastVeinLocation.get(playerId).put(worldName, blockLocation);
-            }
-
-            if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
-            	if (!player.hasPermission("minertrack.bypass")) {
-                  analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
-            	} else if (plugin.getConfigManager().DisableBypass()) {
-            		analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
-            	} else {
-            		// pass
-            	}
-            }
-        }
+    private void cleanupExplosionExposedOres() {
+        long currentTime = System.currentTimeMillis();
+        explosionExposedOres.entrySet().removeIf(entry -> entry.getValue() < currentTime);
     }
 
     private boolean isNewVein(UUID playerId, String worldName, Location location, Material oreType) {

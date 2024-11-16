@@ -1,5 +1,5 @@
 name: MinerTrack
-version: 1.4.7-beta
+version: 1.4.8-beta
 main: link.star_dust.MinerTrack.MinerTrack
 api-version: 1.18
 folia-supported: true
