@@ -71,6 +71,10 @@ public class LanguageManager {
     public String applyColors(String message) {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
+    
+    public String getLogFormat() {
+        return getMessage("log-format");
+    }
 
     // Save only custom values
     private void saveCustomLanguageFile() {

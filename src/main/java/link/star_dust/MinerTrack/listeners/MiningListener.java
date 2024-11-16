@@ -1,5 +1,6 @@
 package link.star_dust.MinerTrack.listeners;
 
+import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -11,6 +12,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -28,10 +30,48 @@ public class MiningListener implements Listener {
 
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
-        
-        int interval = 20 * 60;
-        Bukkit.getScheduler().runTaskTimer(plugin, this::checkAndResetPaths, interval, interval);
+        int interval = 20 * 60; // Scheduling interval (unit: tick)
+
+        if (FoliaCheck.isFolia()) {
+            // Folia scheduling logic
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
+                if (!plugin.isEnabled()) {
+                    task.cancel();
+                    return;
+                }
+                checkAndResetPaths();
+            }, interval, interval);
+        } else {
+            // Use reflection to call the Spigot scheduling logic
+            try {
+                Class<?> schedulerClass = Bukkit.getScheduler().getClass();
+                // Get runTaskTimer method
+                java.lang.reflect.Method runTaskTimer = schedulerClass.getMethod(
+                    "runTaskTimer",
+                    Plugin.class,
+                    Runnable.class,
+                    long.class,
+                    long.class
+                );
+
+                Object[] params = {
+                    plugin,
+                    (Runnable) this::checkAndResetPaths,
+                    (long) interval,
+                    (long) interval
+                };
+
+                runTaskTimer.invoke(
+                    Bukkit.getScheduler(),
+                    params
+                );
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to schedule task on Spigot: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
+
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {

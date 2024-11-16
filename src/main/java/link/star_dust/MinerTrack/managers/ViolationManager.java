@@ -21,6 +21,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class ViolationManager {
     private final MinerTrack plugin;
     private final Map<UUID, Integer> violationLevels = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> vlDecayTasks = new HashMap<>();
+
     private String currentLogFileName;
 
     public ViolationManager(MinerTrack plugin) {
@@ -31,28 +33,7 @@ public class ViolationManager {
     }
 
     private void startViolationDecayTask() {
-        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 2);
-        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!plugin.isEnabled()) {
-                    cancel();
-                    return;
-                }
-
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    UUID playerId = player.getUniqueId();
-                    int currentVL = violationLevels.getOrDefault(playerId, 0);
-
-                    if (currentVL > 0) {
-                        int newVL = Math.max(0, currentVL - decayAmount);
-                        violationLevels.put(playerId, newVL);
-                    }
-                }
-            }
-        }.runTaskTimer(plugin, 0L, decayInterval * 60L * 20L);
+    	Bukkit.getOnlinePlayers().forEach(this::scheduleVLDecayTask);
     }
 
     private String generateLogFileName() {
@@ -92,15 +73,42 @@ public class ViolationManager {
         }
     }
 
-    private void logViolation(String message) {
+    private void logViolation(Player player, int vl, int addVl, String blockType, int count, Location location) {
         if (!plugin.getConfig().getBoolean("log_file")) return;
+
+        String logFormat = plugin.getLanguageManager().getLogFormat();
+        String worldName = location.getWorld() != null ? location.getWorld().getName() : "unknown";
+
+        String year = String.valueOf(LocalDate.now().getYear());
+        String month = String.format("%02d", LocalDate.now().getMonthValue());
+        String day = String.format("%02d", LocalDate.now().getDayOfMonth());
+        String hour = String.format("%02d", LocalDate.now().get(ChronoField.HOUR_OF_DAY));
+        String minute = String.format("%02d", LocalDate.now().get(ChronoField.MINUTE_OF_HOUR));
+        String second = String.format("%02d", LocalDate.now().get(ChronoField.SECOND_OF_MINUTE));
+
+        String formattedMessage = logFormat
+            .replace("%year%", year)
+            .replace("%month%", month)
+            .replace("%day%", day)
+            .replace("%hour%", hour)
+            .replace("%minute%", minute)
+            .replace("%second%", second)
+            .replace("%player%", player.getName())
+            .replace("%vl%", String.valueOf(vl))
+            .replace("%add_vl%", String.valueOf(addVl))
+            .replace("%block_type%", blockType)
+            .replace("%count%", String.valueOf(count))
+            .replace("%world%", worldName)
+            .replace("%pos_x%", String.valueOf(location.getBlockX()))
+            .replace("%pos_y%", String.valueOf(location.getBlockY()))
+            .replace("%pos_z%", String.valueOf(location.getBlockZ()));
 
         String fileName = getLogFileName();
         File logDir = new File(plugin.getDataFolder(), "logs");
         File logFile = new File(logDir, fileName);
 
         try (FileWriter writer = new FileWriter(logFile, true)) {
-            writer.write(message + "\n");
+            writer.write(formattedMessage + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -111,9 +119,16 @@ public class ViolationManager {
     }
 
     public void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
-        UUID playerId = player.getUniqueId();
+    	UUID playerId = player.getUniqueId();
         int newLevel = getViolationLevel(player) + amount;
         violationLevels.put(playerId, newLevel);
+
+        if (vlDecayTasks.containsKey(playerId)) {
+            vlDecayTasks.get(playerId).cancel();
+            vlDecayTasks.remove(playerId);
+        }
+
+        scheduleVLDecayTask(player);
 
         for (String key : plugin.getConfig().getConfigurationSection("xray.commands").getKeys(false)) {
             int threshold = Integer.parseInt(key);
@@ -150,9 +165,39 @@ public class ViolationManager {
                 Bukkit.getConsoleSender().sendMessage(formattedMessage);
             }
 
-            logViolation(formattedMessage);
+            logViolation(player, newLevel, amount, blockType, count, location);
         }
     }
+    
+    private void scheduleVLDecayTask(Player player) {
+        UUID playerId = player.getUniqueId();
+        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 2);
+        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
+
+        BukkitRunnable decayTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                int currentVL = violationLevels.getOrDefault(playerId, 0);
+
+                if (currentVL > 0) {
+                    int newVL = Math.max(0, currentVL - decayAmount);
+                    violationLevels.put(playerId, newVL);
+
+                    if (newVL == 0) {
+                        cancel();
+                        vlDecayTasks.remove(playerId);
+                    }
+                } else {
+                    cancel();
+                    vlDecayTasks.remove(playerId);
+                }
+            }
+        };
+
+        decayTask.runTaskLater(plugin, decayInterval * 60L * 20L);
+        vlDecayTasks.put(playerId, decayTask);
+    }
+
 
     public void resetViolationLevel(Player player) {
         violationLevels.remove(player.getUniqueId());

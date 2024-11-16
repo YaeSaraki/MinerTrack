@@ -65,9 +65,10 @@ xray:
   max_path_length: 500
   
   # Path record is reset after the player VL is 0 {n} minutes.
-  trace_remove: 5
+  trace_remove: 10
   
-  caveBypassAirCount: 4
+  # Think they're in a cave when there are how many cave air is around the player? (5x5x5)
+  caveBypassAirCount: 2
   
   # Violation threshold
   ViolationThreshold:
@@ -76,7 +77,7 @@ xray:
 
   # Violation level decay settings (Unit: minute)
   decay:
-    interval: 2
+    interval: 3
     amount: 1
 
   # Commands executed at specified violation thresholds
