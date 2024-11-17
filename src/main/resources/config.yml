@@ -15,9 +15,6 @@
 # Check for updates on startup (recommended for latest optimizations).
 check_update: true
 
-# Permission Cache refresh interval (seconds, default: 15)
-permission_refresh_interval: 15
-
 # Visual effect when a player is kicked using /minertrack kick (default: true)
 kick_strike_lightning: true
 
@@ -68,13 +65,14 @@ xray:
   explosion_retention_time: 600
   
   # Path record is reset after the player VL is 0 {n} minutes.
-  trace_remove: 10
+  trace_remove: 15
   
   # Cave Detection
   cave-detection:
     # Satisfying the air-threshold or max_vein_distance will think they are in a cave.
-    air-threshold: 4
-    max_vein_distance: 10 # The maximum distance between ore veins, if exceeded, is considered cave behavior
+    air-threshold: 4 # When the number of cave air blocks reaches several, the player is considered to be in a cave?
+    air-detection-range: 3 # 3 = 7x7x7, 2 = 5x5x5
+    max_path_distance: 3 # If the vein is not connected to the excavation path for the maximum distance, cave behavior is considered to exist.
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
 
   # Violation threshold
@@ -84,8 +82,11 @@ xray:
 
   # Violation level decay settings (Unit: minute)
   decay:
-    interval: 3
-    amount: 1
+    interval: 5         # The interval between decay tasks (in minutes)
+    amount: 1           # The value of each linear falloff
+    use_factor: false   # Whether to enable nonlinear attenuation
+    factor: 0.9         # Nonlinear decay scale (only works when use_factor=true)
+
 
   # Commands executed at specified violation thresholds
   commands:

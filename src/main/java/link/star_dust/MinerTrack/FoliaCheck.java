@@ -6,7 +6,7 @@ public class FoliaCheck {
     public static boolean isFolia() {
         if (isFolia == null) {
             try {
-                Class.forName("io.papermc.paper.threadedregions.RegionScheduler");
+                Class.forName("io.papermc.paper.threadedregions.scheduler.RegionScheduler");
                 isFolia = true;
             } catch (ClassNotFoundException e) {
                 isFolia = false;

@@ -174,12 +174,16 @@ public class ViolationManager {
     
     private void scheduleVLDecayTask(Player player) {
         UUID playerId = player.getUniqueId();
-        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 2);
-        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
 
+        // 如果任务已经存在，则跳过
         if (vlDecayTasks.containsKey(playerId)) {
             return;
         }
+
+        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 3); // 默认3分钟
+        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
+        double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9); // 非线性衰减比例
+        boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
 
         BukkitRunnable decayTask = new BukkitRunnable() {
             @Override
@@ -187,23 +191,44 @@ public class ViolationManager {
                 int currentVL = violationLevels.getOrDefault(playerId, 0);
 
                 if (currentVL > 0) {
-                    int newVL = Math.max(0, currentVL - decayAmount);
+                    // 选择线性或非线性衰减
+                    int newVL = useFactor
+                        ? (int) Math.ceil(currentVL * decayFactor) // 非线性衰减
+                        : Math.max(0, currentVL - decayAmount);   // 线性衰减
+
                     violationLevels.put(playerId, newVL);
 
+                    // 日志记录
+                    /*Bukkit.getLogger().info(String.format(
+                        "VL Decay | Player: %s | Current VL: %d | New VL: %d | Time: %s",
+                        player.getName(), currentVL, newVL, LocalDateTime.now()
+                    ));*/
+
+                    // 当 VL 归零时取消任务
                     if (newVL == 0) {
+                        /*Bukkit.getLogger().info(String.format(
+                            "VL Decay | Player: %s | VL dropped to zero. Task canceled.",
+                            player.getName()
+                        ));*/
                         cancel();
                         vlDecayTasks.remove(playerId);
                     }
                 } else {
-                    violationLevels.put(playerId, 0);
                     cancel();
                     vlDecayTasks.remove(playerId);
                 }
             }
         };
 
-        decayTask.runTaskTimer(plugin, 0L, decayInterval * 60L * 20L);
+        // 延迟启动任务，并设置间隔
+        decayTask.runTaskTimer(plugin, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
         vlDecayTasks.put(playerId, decayTask);
+
+        // 记录任务启动日志
+        /*(Bukkit.getLogger().info(String.format(
+            "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
+            player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
+        ));*/
     }
 
     public void resetViolationLevel(Player player) {

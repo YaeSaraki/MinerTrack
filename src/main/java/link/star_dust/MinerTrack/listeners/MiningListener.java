@@ -193,7 +193,7 @@ public class MiningListener implements Listener {
         }
 
         // 判断是否需要进一步分析挖矿路径
-        if (!isInCaveWithAir(blockLocation) || !isSmoothPath(path)) {
+        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
             analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
     }
@@ -331,13 +331,10 @@ public class MiningListener implements Listener {
         if (lastVeinLocation != null) {
             double veinDistance = lastVeinLocation.distance(blockLocation);
 
-            // 如果矿脉间距离超过阈值，进一步判断路径是否联通
-            if (veinDistance > plugin.getConfigManager().getMaxVeinDistance()) {
-                if (!isPathConnected(lastVeinLocation, blockLocation, path)) {
-                    // 如果路径不联通，认为是在洞穴中挖矿
-                	if (plugin.getConfigManager().caveSkipVL()) {
-                        return;
-                	}
+            // 如果路径不联通，认为是在洞穴中挖矿
+            if (!isPathConnected(lastVeinLocation, blockLocation, path)) {
+                if (plugin.getConfigManager().caveSkipVL()) {
+                    return;
                 }
             }
         }
@@ -373,7 +370,7 @@ public class MiningListener implements Listener {
             double endDistance = end.distance(point);
 
             // 如果某个路径点与 start 和 end 距离都较近，认为路径联通
-            if (startDistance <= 3 && endDistance <= 3) {
+            if (startDistance <= plugin.getConfigManager().getMaxVeinDistance() && endDistance <= plugin.getConfigManager().getMaxVeinDistance()) {
                 return true;
             }
         }
@@ -381,8 +378,9 @@ public class MiningListener implements Listener {
     }
     
     private void checkAndResetPaths() {
+    	/*
         long now = System.currentTimeMillis();
-        long traceRemoveMillis = plugin.getConfig().getInt("xray.trace_remove", 5) * 60 * 1000L; // The configured minutes are converted to milliseconds
+        long traceRemoveMillis = plugin.getConfig().getInt("xray.trace_remove", 15) * 60 * 1000L; // The configured minutes are converted to milliseconds
 
         for (UUID playerId : new HashSet<>(vlZeroTimestamp.keySet())) {
             Long lastZeroTime = vlZeroTimestamp.get(playerId);
@@ -392,6 +390,9 @@ public class MiningListener implements Listener {
                 vlZeroTimestamp.remove(playerId); // Remove the timestamp that has been processed
             }
         }
+        */
+    	// BUGGED
+    	return;
     }
 
     private void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {

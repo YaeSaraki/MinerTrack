@@ -6,44 +6,127 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import link.star_dust.MinerTrack.MinerTrack;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.List;
+import java.util.Set;
 
 public class ConfigManager {
     private final MinerTrack plugin;
-    private final FileConfiguration config;
     private final File configFile;
+    private final FileConfiguration config;
 
     public ConfigManager(MinerTrack plugin) {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "config.yml");
 
-        // Load the default configuration first
-        plugin.saveDefaultConfig();
+        // Load existing config
+        this.config = YamlConfiguration.loadConfiguration(configFile);
 
-        // Load the custom configuration from file, merging it with defaults
-        config = YamlConfiguration.loadConfiguration(configFile);
-
-        // Load defaults from internal resource file using InputStreamReader
+        // Load defaults and merge only missing keys
         try (InputStream defaultStream = plugin.getResource("config.yml")) {
             if (defaultStream != null) {
                 YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defaultStream));
-                config.setDefaults(defaultConfig);
-                config.options().copyDefaults(true);
+                mergeConfigurations(config, defaultConfig, ""); // Recursive merge
+                saveConfig(); // Save back merged configuration
             }
         } catch (IOException e) {
-            plugin.getLogger().severe("Could not load default configuration: " + e.getMessage());
+            plugin.getLogger().severe("Error loading default configuration: " + e.getMessage());
         }
+    }
 
-        // Save only custom values back to file
-        saveCustomConfig();
+    /**
+     * Recursively merges default configuration into the current configuration.
+     *
+     * @param currentConfig The current configuration to merge into.
+     * @param defaultConfig The default configuration to merge from.
+     */
+    private void mergeConfigurations(ConfigurationSection currentConfig, ConfigurationSection defaultConfig, String currentPath) {
+        Set<String> whitelistKeys = Set.of(
+        	"xray",
+        	"check_update",
+        	"kick_strike_lightning",
+        	"log_file",
+        	"delete_time",
+            "disable_bypass_permission",
+            "xray.enable",
+            "xray.worlds",
+            "xray.worlds.all_unnamed_world",
+            "xray.worlds.all_unnamed_world.enable",
+            "xray.rare-ores",
+            "xray.trace_back_length",
+            "xray.max_path_length",
+            "xray.explosion_retention_time",
+            "xray.trace_remove",
+            "xray.cave-detection",
+            "xray.cave-detection.air-threshold",
+            "xray.cave-detection.air-detection-range",
+            "xray.cave-detection.max_path_distance",
+            "xray.cave-detection.cave_check_skip_vl",
+            "xray.ViolationThreshold",
+            "xray.ViolationThreshold.turnCountThreshold",
+            "xray.ViolationThreshold.veinCountThreshold",
+            "xray.decay.interval",
+            "xray.decay.amount",
+            "xray.decay.factor",
+            "xray.decay.use_factor",
+            "xray.decay"
+        );
+
+        for (String key : defaultConfig.getKeys(false)) {
+            String fullKeyPath = (currentPath.isEmpty() ? "" : currentPath + ".") + key;
+            if (!whitelistKeys.contains(fullKeyPath)) {
+                continue; // Skip keys not in the whitelist
+            }
+
+            if (currentConfig.contains(key)) {
+                Object currentValue = currentConfig.get(key);
+                Object defaultValue = defaultConfig.get(key);
+
+                // Recurse for nested sections
+                if (currentValue instanceof ConfigurationSection && defaultValue instanceof ConfigurationSection) {
+                    mergeConfigurations(
+                        (ConfigurationSection) currentValue,
+                        (ConfigurationSection) defaultValue,
+                        fullKeyPath
+                    );
+                }
+            } else {
+                // Add missing key
+                currentConfig.set(key, defaultConfig.get(key));
+            }
+        }
+    }
+
+
+    /**
+     * Saves the current configuration back to the file while preserving structure.
+     */
+    public void saveConfig() {
+        try {
+            config.save(configFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Could not save configuration to " + configFile.getName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reloads the configuration from the file.
+     */
+    public void reloadConfig() {
+        try {
+            config.load(configFile);
+        } catch (IOException | InvalidConfigurationException e) {
+            plugin.getLogger().severe("Error reloading configuration: " + e.getMessage());
+        }
+    }
+
+    // Add your getter methods here, for example:
+    public boolean isDenyBypassPermissionEnabled() {
+        return config.getBoolean("disable_bypass_permission", false);
     }
 
     public boolean isKickStrikeLightning() {
-        return config.getBoolean("xray.kick-strike-lightning", false);
+        return config.getBoolean("xray.kick-strike-lightning", true);
     }
 
     public List<String> getRareOres() {
@@ -65,9 +148,9 @@ public class ConfigManager {
     public int getCaveBypassAirCount() {
         return config.getInt("xray.cave-detection.air-threshold", 4);
     }
-    
+
     public int getCaveCheckDetection() {
-        return config.getInt("xray.cave-detection.detection", 3);
+        return config.getInt("xray.cave-detection.air-detection-range", 3);
     }
 
     public int getWorldMaxHeight(String worldName) {
@@ -86,27 +169,9 @@ public class ConfigManager {
         }
         return worldsSection.getBoolean(worldName + ".enable", false);
     }
-    
+
     public boolean DisableBypass() {
         return config.getBoolean("disable_bypass_permission", false);
-    }
-
-    // Save only custom (non-default) values to config file
-    public void saveCustomConfig() {
-        try {
-            config.save(configFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save custom configuration to " + configFile.getName() + ": " + e.getMessage());
-        }
-    }
-
-    // Reload the configuration
-    public void reloadConfig() {
-        try {
-            config.load(configFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            plugin.getLogger().severe("Could not reload configuration: " + e.getMessage());
-        }
     }
 
     public String getCommandForThreshold(int threshold) {
@@ -120,13 +185,15 @@ public class ConfigManager {
     public int getMaxVeinDistance() {
         return config.getInt("xray.cave-detection.max_vein_distance", 10);
     }
-    
+
     public int traceBackLength() {
         return config.getInt("xray.trace_back_length", 10);
     }
-    
+
     public boolean caveSkipVL() {
         return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
     }
 }
+
+
 
