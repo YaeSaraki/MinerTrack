@@ -63,7 +63,7 @@ public class ConfigManager {
     }
 
     public int getCaveBypassAirCount() {
-        return config.getInt("xray.cave-detection.air-threshold", 10);
+        return config.getInt("xray.cave-detection.air-threshold", 4);
     }
     
     public int getCaveCheckDetection() {
@@ -72,7 +72,7 @@ public class ConfigManager {
 
     public int getWorldMaxHeight(String worldName) {
         ConfigurationSection xraySection = config.getConfigurationSection("xray.worlds");
-        if (xraySection == null || !xraySection.contains(worldName)) {
+        if (xraySection == null || !xraySection.isConfigurationSection(worldName)) {
             plugin.getLogger().warning("Max height configuration for world " + worldName + " not found. Defaulting to no height limit.");
             return -1;
         }
@@ -80,8 +80,11 @@ public class ConfigManager {
     }
 
     public boolean isWorldDetectionEnabled(String worldName) {
-        return config.getBoolean("xray.worlds." + worldName + ".enable",
-                config.getBoolean("xray.worlds.all_unnamed_world.enable", false));
+        ConfigurationSection worldsSection = config.getConfigurationSection("xray.worlds");
+        if (worldsSection == null || !worldsSection.isConfigurationSection(worldName)) {
+            return config.getBoolean("xray.worlds.all_unnamed_world.enable", false);
+        }
+        return worldsSection.getBoolean(worldName + ".enable", false);
     }
     
     public boolean DisableBypass() {
@@ -114,7 +117,16 @@ public class ConfigManager {
         return null;
     }
 
-	public int getAncientDebrisVeinCountThreshold() {
-		return config.getInt("ViolationThreshold.AncientDebrisVeinCountThreshold", 2);
-	}
+    public int getMaxVeinDistance() {
+        return config.getInt("xray.cave-detection.max_vein_distance", 10);
+    }
+    
+    public int traceBackLength() {
+        return config.getInt("xray.trace_back_length", 10);
+    }
+    
+    public boolean caveSkipVL() {
+        return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
+    }
 }
+

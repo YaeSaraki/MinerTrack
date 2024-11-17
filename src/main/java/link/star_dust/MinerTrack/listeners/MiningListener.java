@@ -42,6 +42,7 @@ public class MiningListener implements Listener {
                 }
                 checkAndResetPaths();
                 cleanupExplosionExposedOres(); // Periodically clean up explosion-exposed ores
+                cleanupExpiredPaths();
             }, interval, interval);
         } else {
             // Use reflection to call the Spigot scheduling logic
@@ -60,6 +61,7 @@ public class MiningListener implements Listener {
                     (Runnable) () -> {
                         checkAndResetPaths();
                         cleanupExplosionExposedOres();
+                        cleanupExpiredPaths();
                     },
                     (long) interval,
                     (long) interval
@@ -75,22 +77,6 @@ public class MiningListener implements Listener {
             }
         }
     }
-
-    // Only for test
-    /*@EventHandler
-    public void onPlayerMine(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        Location location = event.getBlock().getLocation();
-        
-        if (isInAdvancedCave(location)) {
-        	player.sendMessage(ChatColor.GOLD + "You are in an advanced cave!");
-        	if (hasHighConnectivity(location)) {
-                player.sendMessage(ChatColor.BLUE + "This cave is highly connected!");
-            }
-        } else {
-        	player.sendMessage(ChatColor.RED + "You are not in a cave!");
-        }
-    }*/
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -206,41 +192,103 @@ public class MiningListener implements Listener {
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
         }
 
-        // 洞穴检测
-        /*
-        boolean isDynamicCave = isInCaveDynamic(blockLocation);
-        boolean isConnectedCave = hasHighConnectivity(blockLocation);
-        boolean isAdvancedCave = isInAdvancedCave(blockLocation);
-        */
-
         // 判断是否需要进一步分析挖矿路径
-        /*
-        if (!(isDynamicCave && isConnectedCave && isAdvancedCave) || !isSmoothPath(path)) {
-            analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
-        }
-        */
         if (!isInCaveWithAir(blockLocation) || !isSmoothPath(path)) {
             analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
     }
 
+    private void cleanupExpiredPaths() {
+        long now = System.currentTimeMillis();
+        miningPath.forEach((playerId, paths) -> {
+            paths.values().forEach(path -> path.removeIf(loc -> now - loc.getWorld().getTime() > plugin.getConfigManager().traceBackLength()));
+        });
+    }
+    
     private void cleanupExplosionExposedOres() {
         long currentTime = System.currentTimeMillis();
         explosionExposedOres.entrySet().removeIf(entry -> entry.getValue() < currentTime);
     }
 
     private boolean isNewVein(UUID playerId, String worldName, Location location, Material oreType) {
-        Map<String, Location> lastLocations = lastVeinLocation.getOrDefault(playerId, new HashMap<String, Location>());
+        // 获取玩家在当前世界的最后矿脉位置记录
+        Map<String, Location> lastLocations = lastVeinLocation.getOrDefault(playerId, new HashMap<>());
         Location lastLocation = lastLocations.get(worldName);
 
-        // Check if the player is in the same world before calculating distance
-        if (lastLocation == null || !lastLocation.getWorld().equals(location.getWorld()) || lastLocation.distance(location) > 5 || !lastLocation.getBlock().getType().equals(oreType)) {
-            // Update last locations for each world
+        // 使用 isSameVein 判断是否为同一矿脉
+        if (lastLocation == null || !isSameVein(lastLocation, location, oreType)) {
+            // 更新该玩家在该世界的最后矿脉位置
             lastLocations.put(worldName, location);
             lastVeinLocation.put(playerId, lastLocations);
-            return true;
+            return true; // 是新矿脉
+        }
+
+        return false; // 属于同一矿脉
+    }
+
+    
+    private boolean isSameVein(Location loc1, Location loc2, Material type) {
+        if (!loc1.getWorld().equals(loc2.getWorld())) return false;
+        if (!loc2.getBlock().getType().equals(type)) return false;
+
+        // 检查两点之间的矿石连通性，包括相邻方块以及八个角
+        Set<Location> visited = new HashSet<>();
+        Queue<Location> toVisit = new LinkedList<>();
+        toVisit.add(loc1);
+
+        while (!toVisit.isEmpty()) {
+            Location current = toVisit.poll();
+            if (visited.contains(current)) continue;
+            visited.add(current);
+
+            // 如果到达目标点，则认为是同一矿脉
+            if (current.equals(loc2)) {
+                return true;
+            }
+
+            // 遍历相邻的六个面和八个角的方块
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 2) continue; // 排除非直接邻接方块
+
+                        Location neighbor = current.clone().add(dx, dy, dz);
+                        if (neighbor.getBlock().getType().equals(type)) {
+                            toVisit.add(neighbor);
+                        }
+                    }
+                }
+            }
         }
         return false;
+    }
+
+    private boolean isSmoothPath(List<Location> path) {
+        if (path.size() < 2) return true;
+
+        int totalTurns = 0;
+        int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
+        Location lastLocation = null;
+        Vector lastDirection = null;
+
+        for (Location currentLocation : path) {
+            if (lastLocation != null) {
+                // 当前方向向量
+                Vector currentDirection = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
+
+                if (lastDirection != null) {
+                    // 计算方向变化的角度（转向幅度）
+                    double dotProduct = lastDirection.dot(currentDirection);
+                    if (dotProduct < Math.cos(Math.toRadians(45))) { // 夹角大于45度，记为一次转向
+                        totalTurns++;
+                    }
+                }
+                lastDirection = currentDirection;
+            }
+            lastLocation = currentLocation;
+        }
+        // 如果转向次数超过阈值，路径视为不平滑
+        return totalTurns < turnThreshold;
     }
     
     private boolean isInCaveWithAir(Location location) {
@@ -259,188 +307,47 @@ public class MiningListener implements Listener {
                     if (type == Material.CAVE_AIR) {
                         airCount++;
                         if (airCount > threshold) {
-                            return true;
+                        	if (plugin.getConfigManager().caveSkipVL()) {
+                                return false;
+                        	} else {
+                                return true;
+                        	}
                         }
                     }
                 }
             }
         }
-
+        
         return false;
-    }
-
-
-    /*
-    private boolean isInCave(Location location) {
-        int airCount = 0;
-        int maxDepth = 30; // 检测范围
-        int thresholdAir = 50; // 空气阈值
-
-        Set<Material> uniqueBlocks = new HashSet<>();
-        Queue<Location> toVisit = new LinkedList<>();
-        Set<Location> visited = new HashSet<>();
-
-        toVisit.add(location);
-
-        while (!toVisit.isEmpty() && airCount <= thresholdAir && maxDepth > 0) {
-            Location current = toVisit.poll();
-            maxDepth--;
-
-            if (visited.contains(current)) continue;
-            visited.add(current);
-
-            Material blockType = current.getBlock().getType();
-
-            // 统计空气块数量
-            if (blockType == Material.CAVE_AIR || blockType == Material.AIR) {
-                airCount++;
-            }
-
-            // 统计不同类型的方块
-            uniqueBlocks.add(blockType);
-
-            // 将周围方块加入待检测队列
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    for (int z = -1; z <= 1; z++) {
-                        if (x == 0 && y == 0 && z == 0) continue;
-                        Location adjacent = current.clone().add(x, y, z);
-                        if (!visited.contains(adjacent)) {
-                            toVisit.add(adjacent);
-                        }
-                    }
-                }
-            }
-        }
-
-        // 判定为洞穴条件：空气块多
-        return airCount > thresholdAir;
-    }
-    
-    private boolean isInCaveDynamic(Location location) {
-        int yLevel = location.getBlockY(); // 获取玩家 Y 坐标
-        int thresholdAir = yLevel < 0 ? 70 : 50; // Y < 0 时空气阈值更高
-        int maxDepth = yLevel < 0 ? 40 : 30; // Y < 0 时检测深度更大
-
-        // 调用核心检测逻辑
-        return isInCaveWithParams(location, maxDepth, thresholdAir);
-    }
-
-    private boolean isInCaveWithParams(Location location, int maxDepth, int thresholdAir) {
-        int airCount = 0;
-
-        Set<Material> uniqueBlocks = new HashSet<>();
-        Queue<Location> toVisit = new LinkedList<>();
-        Set<Location> visited = new HashSet<>();
-
-        toVisit.add(location);
-
-        while (!toVisit.isEmpty() && airCount <= thresholdAir && maxDepth > 0) {
-            Location current = toVisit.poll();
-            maxDepth--;
-
-            if (visited.contains(current)) continue;
-            visited.add(current);
-
-            Material blockType = current.getBlock().getType();
-
-            // 统计空气块数量
-            if (blockType == Material.CAVE_AIR || blockType == Material.AIR) {
-                airCount++;
-            }
-
-            // 统计不同类型的方块
-            uniqueBlocks.add(blockType);
-
-            // 将周围方块加入待检测队列
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    for (int z = -1; z <= 1; z++) {
-                        if (x == 0 && y == 0 && z == 0) continue;
-                        Location adjacent = current.clone().add(x, y, z);
-                        if (!visited.contains(adjacent)) {
-                            toVisit.add(adjacent);
-                        }
-                    }
-                }
-            }
-        }
-
-        // 判定为洞穴条件：空气块多
-        return airCount > thresholdAir;
-    }
-
-    
-    private boolean hasHighConnectivity(Location location) {
-        int connectedCount = 0;
-        int threshold = 10; // 连通空气块阈值
-        int maxDepth = 20; // 检测深度限制
-
-        Queue<Location> toVisit = new LinkedList<>();
-        Set<Location> visited = new HashSet<>();
-        toVisit.add(location);
-
-        while (!toVisit.isEmpty() && connectedCount <= threshold && maxDepth > 0) {
-            Location current = toVisit.poll();
-            maxDepth--;
-
-            if (visited.contains(current)) continue;
-            visited.add(current);
-
-            Material blockType = current.getBlock().getType();
-            if (blockType == Material.CAVE_AIR || blockType == Material.AIR) {
-                connectedCount++;
-
-                for (int x = -1; x <= 1; x++) {
-                    for (int y = -1; y <= 1; y++) {
-                        for (int z = -1; z <= 1; z++) {
-                            if (x == 0 && y == 0 && z == 0) continue;
-                            Location adjacent = current.clone().add(x, y, z);
-                            if (!visited.contains(adjacent)) {
-                                toVisit.add(adjacent);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return connectedCount > threshold;
-    }
-    
-    private boolean isInAdvancedCave(Location location) {
-        boolean isBasicCave = isInCave(location);
-        boolean isHighlyConnected = hasHighConnectivity(location);
-
-        return isBasicCave && isHighlyConnected;
-    }
-    */
-
-    private boolean isSmoothPath(List<Location> path) {
-        Location lastLocation = null;
-        int turns = 0;
-        int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
-        for (Location currentLocation : path) {
-            if (lastLocation != null) {
-                Vector direction = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
-                if (Math.abs(direction.getX()) > 0.7 || Math.abs(direction.getZ()) > 0.7) {
-                    turns++;
-                }
-            }
-            lastLocation = currentLocation;
-        }
-        return turns < turnThreshold;
     }
 
     private void analyzeMiningPath(Player player, List<Location> path, Material blockType, int count, Location blockLocation) {
         UUID playerId = player.getUniqueId();
+        Map<String, Location> lastVeins = lastVeinLocation.getOrDefault(playerId, new HashMap<>());
+        String worldName = blockLocation.getWorld().getName();
+        Location lastVeinLocation = lastVeins.get(worldName);
+
+        // 如果有上一个矿脉记录，检查路径联通性
+        if (lastVeinLocation != null) {
+            double veinDistance = lastVeinLocation.distance(blockLocation);
+
+            // 如果矿脉间距离超过阈值，进一步判断路径是否联通
+            if (veinDistance > plugin.getConfigManager().getMaxVeinDistance()) {
+                if (!isPathConnected(lastVeinLocation, blockLocation, path)) {
+                    // 如果路径不联通，认为是在洞穴中挖矿
+                	if (plugin.getConfigManager().caveSkipVL()) {
+                        return;
+                	}
+                }
+            }
+        }
+
+        // 如果路径分析通过，继续处理违规逻辑
         int disconnectedSegments = 0;
-        @SuppressWarnings("unused")
-		double totalDistance = 0.0;
+        double totalDistance = 0.0;
         Location lastLocation = null;
 
-        for (int i = 0; i < path.size(); i++) {
-            Location currentLocation = path.get(i);
+        for (Location currentLocation : path) {
             if (lastLocation != null) {
                 double distance = currentLocation.distance(lastLocation);
                 totalDistance += distance;
@@ -451,11 +358,26 @@ public class MiningListener implements Listener {
             }
             lastLocation = currentLocation;
         }
+
         int veinCount = minedVeinCount.getOrDefault(playerId, 0);
         if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
             increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
             minedVeinCount.put(playerId, 0);
         }
+    }
+    
+    private boolean isPathConnected(Location start, Location end, List<Location> path) {
+        // 检查路径中是否存在从 start 到 end 的合理联通
+        for (Location point : path) {
+            double startDistance = start.distance(point);
+            double endDistance = end.distance(point);
+
+            // 如果某个路径点与 start 和 end 距离都较近，认为路径联通
+            if (startDistance <= 3 && endDistance <= 3) {
+                return true;
+            }
+        }
+        return false;
     }
     
     private void checkAndResetPaths() {

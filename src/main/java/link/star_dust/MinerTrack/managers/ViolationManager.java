@@ -177,6 +177,10 @@ public class ViolationManager {
         int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 2);
         int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
 
+        if (vlDecayTasks.containsKey(playerId)) {
+            return;
+        }
+
         BukkitRunnable decayTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -191,16 +195,16 @@ public class ViolationManager {
                         vlDecayTasks.remove(playerId);
                     }
                 } else {
+                    violationLevels.put(playerId, 0);
                     cancel();
                     vlDecayTasks.remove(playerId);
                 }
             }
         };
 
-        decayTask.runTaskLater(plugin, decayInterval * 60L * 20L);
+        decayTask.runTaskTimer(plugin, 0L, decayInterval * 60L * 20L);
         vlDecayTasks.put(playerId, decayTask);
     }
-
 
     public void resetViolationLevel(Player player) {
         violationLevels.remove(player.getUniqueId());
