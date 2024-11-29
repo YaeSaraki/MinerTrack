@@ -90,6 +90,6 @@ xray:
 
   # Commands executed at specified violation thresholds
   commands:
-    4: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 4&7]'
-    6: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 6&7]'
-    8: 'minertrack kick %player% X-Ray'
+    3: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 3&7]'
+    5: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 5&7]'
+    6: 'minertrack kick %player% X-Ray'

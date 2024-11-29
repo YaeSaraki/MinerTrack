@@ -21,8 +21,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class ViolationManager {
     private final MinerTrack plugin;
-    private final Map<UUID, Integer> violationLevels = new HashMap<>();
+    private final static Map<UUID, Integer> violationLevels = new HashMap<>();
     private final Map<UUID, BukkitRunnable> vlDecayTasks = new HashMap<>();
+    private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
 
     private String currentLogFileName;
 
@@ -36,7 +37,7 @@ public class ViolationManager {
     private void startViolationDecayTask() {
     	Bukkit.getOnlinePlayers().forEach(this::scheduleVLDecayTask);
     }
-
+    
     private String generateLogFileName() {
         LocalDate date = LocalDate.now();
         String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -116,23 +117,32 @@ public class ViolationManager {
         }
     }
 
-
+    public static int getViolationLevel(UUID uuid) {
+        return violationLevels.getOrDefault(uuid, 0);
+    }
+    
     public int getViolationLevel(Player player) {
         return violationLevels.getOrDefault(player.getUniqueId(), 0);
     }
 
     public void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
-    	UUID playerId = player.getUniqueId();
+        UUID playerId = player.getUniqueId();
         int newLevel = getViolationLevel(player) + amount;
         violationLevels.put(playerId, newLevel);
 
+        // 移除 VL=0 的时间戳
+        vlZeroTimestamp.remove(playerId);
+
+        // 取消当前的 VL 衰减任务
         if (vlDecayTasks.containsKey(playerId)) {
             vlDecayTasks.get(playerId).cancel();
             vlDecayTasks.remove(playerId);
         }
 
+        // 为新的 VL 重新安排衰减任务
         scheduleVLDecayTask(player);
 
+        // 处理 VL 增加后的其他逻辑
         for (String key : plugin.getConfig().getConfigurationSection("xray.commands").getKeys(false)) {
             int threshold = Integer.parseInt(key);
             if (newLevel == threshold) {
@@ -180,6 +190,7 @@ public class ViolationManager {
             return;
         }
 
+        // 从配置文件中加载参数
         int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 3); // 默认3分钟
         int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
         double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9); // 非线性衰减比例
@@ -191,29 +202,23 @@ public class ViolationManager {
                 int currentVL = violationLevels.getOrDefault(playerId, 0);
 
                 if (currentVL > 0) {
-                    // 选择线性或非线性衰减
+                    // 根据配置选择线性或非线性衰减
                     int newVL = useFactor
                         ? (int) Math.ceil(currentVL * decayFactor) // 非线性衰减
                         : Math.max(0, currentVL - decayAmount);   // 线性衰减
 
                     violationLevels.put(playerId, newVL);
 
-                    // 日志记录
-                    /*Bukkit.getLogger().info(String.format(
-                        "VL Decay | Player: %s | Current VL: %d | New VL: %d | Time: %s",
-                        player.getName(), currentVL, newVL, LocalDateTime.now()
-                    ));*/
-
-                    // 当 VL 归零时取消任务
+                    // 如果 VL 归零，记录时间戳并移除任务
                     if (newVL == 0) {
-                        /*Bukkit.getLogger().info(String.format(
-                            "VL Decay | Player: %s | VL dropped to zero. Task canceled.",
-                            player.getName()
-                        ));*/
+                        vlZeroTimestamp.put(playerId, System.currentTimeMillis());
+                        plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
+
                         cancel();
                         vlDecayTasks.remove(playerId);
                     }
                 } else {
+                    // VL 已经为 0，任务无需继续
                     cancel();
                     vlDecayTasks.remove(playerId);
                 }
@@ -225,11 +230,12 @@ public class ViolationManager {
         vlDecayTasks.put(playerId, decayTask);
 
         // 记录任务启动日志
-        /*(Bukkit.getLogger().info(String.format(
+        /*plugin.getLogger().info(String.format(
             "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
             player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
         ));*/
     }
+
 
     public void resetViolationLevel(Player player) {
         violationLevels.remove(player.getUniqueId());

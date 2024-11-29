@@ -2,6 +2,7 @@ package link.star_dust.MinerTrack.listeners;
 
 import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
+import link.star_dust.MinerTrack.managers.ViolationManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -364,35 +365,57 @@ public class MiningListener implements Listener {
     }
     
     private boolean isPathConnected(Location start, Location end, List<Location> path) {
-        // 检查路径中是否存在从 start 到 end 的合理联通
-        for (Location point : path) {
-            double startDistance = start.distance(point);
-            double endDistance = end.distance(point);
+        // 如果路径为空，直接返回 false
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
 
-            // 如果某个路径点与 start 和 end 距离都较近，认为路径联通
-            if (startDistance <= plugin.getConfigManager().getMaxVeinDistance() && endDistance <= plugin.getConfigManager().getMaxVeinDistance()) {
+        double maxDistance = plugin.getConfigManager().getMaxVeinDistance();
+        Set<Location> visited = new HashSet<>();
+        Queue<Location> queue = new LinkedList<>();
+
+        // 初始化搜索队列
+        queue.add(start);
+        visited.add(start);
+
+        while (!queue.isEmpty()) {
+            Location current = queue.poll();
+
+            // 如果当前节点可以直接到达终点，则路径联通
+            if (current.distance(end) <= maxDistance) {
                 return true;
             }
+
+            // 检查路径中所有未访问的点
+            for (Location point : path) {
+                if (!visited.contains(point) && current.distance(point) <= maxDistance) {
+                    queue.add(point);
+                    visited.add(point);
+                }
+            }
         }
+
+        // 如果搜索完成后仍未找到连接路径，则不联通
         return false;
     }
+
     
     private void checkAndResetPaths() {
-    	/*
         long now = System.currentTimeMillis();
-        long traceRemoveMillis = plugin.getConfig().getInt("xray.trace_remove", 15) * 60 * 1000L; // The configured minutes are converted to milliseconds
+        long traceRemoveMillis = plugin.getConfig().getInt("xray.trace_remove", 15) * 60 * 1000L; // 默认15分钟
 
         for (UUID playerId : new HashSet<>(vlZeroTimestamp.keySet())) {
             Long lastZeroTime = vlZeroTimestamp.get(playerId);
-            if (lastZeroTime != null && now - lastZeroTime > traceRemoveMillis) {
-                miningPath.remove(playerId); // Clear the path record
-                minedVeinCount.remove(playerId); // Reset the vein count
-                vlZeroTimestamp.remove(playerId); // Remove the timestamp that has been processed
+            int vl = ViolationManager.getViolationLevel(playerId);
+
+            if (lastZeroTime != null && vl == 0 && now - lastZeroTime > traceRemoveMillis) {
+                miningPath.remove(playerId); // 清除路径
+                minedVeinCount.remove(playerId); // 清除矿脉计数
+                vlZeroTimestamp.remove(playerId); // 清除时间戳
+
+                plugin.getLogger().info("Path reset for player: " + playerId + " due to VL=0 and timeout.");
             }
         }
-        */
-    	// BUGGED
-    	return;
     }
 
     private void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
