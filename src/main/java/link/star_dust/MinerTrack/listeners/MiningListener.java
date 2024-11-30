@@ -161,7 +161,6 @@ public class MiningListener implements Listener {
     private void handleXRayDetection(Player player, Material blockType, Location blockLocation) {
         UUID playerId = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
-        int traceBackLength = plugin.getConfig().getInt("xray.trace_back_length", 10) * 60000;
         int maxPathLength = plugin.getConfig().getInt("xray.max_path_length", 500);
 
         // 初始化玩家挖矿路径信息
@@ -171,12 +170,6 @@ public class MiningListener implements Listener {
 
         worldPaths.putIfAbsent(worldName, new ArrayList<>());
         List<Location> path = worldPaths.get(worldName);
-
-        // 检查上次挖掘时间并清除过期路径
-        if (lastMiningTime.containsKey(playerId) && (currentTime - lastMiningTime.get(playerId)) > traceBackLength) {
-            path.clear();
-            minedVeinCount.put(playerId, 0);
-        }
 
         // 更新挖矿路径和时间
         path.add(blockLocation);
@@ -201,8 +194,10 @@ public class MiningListener implements Listener {
 
     private void cleanupExpiredPaths() {
         long now = System.currentTimeMillis();
+        long traceBackLength = plugin.getConfigManager().traceBackLength(); // 获取回溯时间长度
+
         miningPath.forEach((playerId, paths) -> {
-            paths.values().forEach(path -> path.removeIf(loc -> now - loc.getWorld().getTime() > plugin.getConfigManager().traceBackLength()));
+            paths.values().forEach(path -> path.removeIf(loc -> now - loc.getWorld().getTime() > traceBackLength));
         });
     }
     
@@ -232,7 +227,7 @@ public class MiningListener implements Listener {
         if (!loc1.getWorld().equals(loc2.getWorld())) return false;
         if (!loc2.getBlock().getType().equals(type)) return false;
 
-        // 检查两点之间的矿石连通性，包括相邻方块以及八个角
+        double maxDistance = plugin.getConfigManager().getMaxVeinDistance(); // 增加可配置的矿脉距离
         Set<Location> visited = new HashSet<>();
         Queue<Location> toVisit = new LinkedList<>();
         toVisit.add(loc1);
@@ -242,19 +237,19 @@ public class MiningListener implements Listener {
             if (visited.contains(current)) continue;
             visited.add(current);
 
-            // 如果到达目标点，则认为是同一矿脉
-            if (current.equals(loc2)) {
+            // 检测是否与目标位置接近
+            if (current.distance(loc2) <= maxDistance) {
                 return true;
             }
 
-            // 遍历相邻的六个面和八个角的方块
+            // 遍历邻接方块，包括直接邻接和角点
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     for (int dz = -1; dz <= 1; dz++) {
-                        if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 2) continue; // 排除非直接邻接方块
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
 
                         Location neighbor = current.clone().add(dx, dy, dz);
-                        if (neighbor.getBlock().getType().equals(type)) {
+                        if (!visited.contains(neighbor) && neighbor.getBlock().getType().equals(type)) {
                             toVisit.add(neighbor);
                         }
                     }
@@ -364,6 +359,53 @@ public class MiningListener implements Listener {
         }
     }
     
+    /**
+     * 检查当前矿脉是否与上一个矿脉路径联通。
+     *
+     * @param lastVeinPath 上一个矿脉的路径点
+     * @param newVeinPath  当前矿脉的路径点
+     * @return 如果两个矿脉路径联通，则返回 true，否则返回 false
+     */
+    private boolean areVeinsConnected(List<Location> lastVeinPath, List<Location> newVeinPath) {
+        // 如果上一个或当前矿脉路径为空，直接返回 false
+        if (lastVeinPath == null || lastVeinPath.isEmpty() || newVeinPath == null || newVeinPath.isEmpty()) {
+            return false;
+        }
+
+        double maxDistance = plugin.getConfigManager().getMaxVeinDistance();
+        Set<Location> visited = new HashSet<>();
+        Queue<Location> queue = new LinkedList<>();
+
+        // 遍历上一个矿脉路径的所有点
+        for (Location start : lastVeinPath) {
+            queue.add(start);
+            visited.add(start);
+
+            while (!queue.isEmpty()) {
+                Location current = queue.poll();
+
+                // 检查当前路径是否能到达新矿脉路径中的任意点
+                for (Location newPoint : newVeinPath) {
+                    if (current.distance(newPoint) <= maxDistance) {
+                        return true;
+                    }
+                }
+
+                // 将当前矿脉路径中的点加入搜索队列
+                for (Location next : lastVeinPath) {
+                    if (!visited.contains(next) && current.distance(next) <= maxDistance) {
+                        queue.add(next);
+                        visited.add(next);
+                    }
+                }
+            }
+        }
+
+        // 如果搜索完成后未找到联通点，则不联通
+        return false;
+    }
+
+    
     private boolean isPathConnected(Location start, Location end, List<Location> path) {
         // 如果路径为空，直接返回 false
         if (path == null || path.isEmpty()) {
@@ -398,7 +440,6 @@ public class MiningListener implements Listener {
         // 如果搜索完成后仍未找到连接路径，则不联通
         return false;
     }
-
     
     private void checkAndResetPaths() {
         long now = System.currentTimeMillis();
@@ -413,7 +454,7 @@ public class MiningListener implements Listener {
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 
-                plugin.getLogger().info("Path reset for player: " + playerId + " due to VL=0 and timeout.");
+                // plugin.getLogger().info("Path reset for player: " + playerId + " due to VL=0 and timeout.");
             }
         }
     }

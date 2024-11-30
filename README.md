@@ -2,6 +2,14 @@
 
 ## MinerTrack Anti-XRay
 
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/minertrack?style=flat&label=Modrinth%20Downloads&color=%234bd965)](https://modrinth.com/plugin/minertrack) [![Github all releases](https://img.shields.io/github/downloads/At87668/MinerTrack/total.svg?style=flat&label=Github%20Downloads)](https://gitHub.com/At87668/MinerTrack/releases/) [![GitHub release](https://img.shields.io/github/release/At87668/MinerTrack.svg?style=flat&label=Latest%20Version)](https://gitHub.com/At87668/MinerTrack/releases/)
+
+[![GitHub issues](https://img.shields.io/github/issues/At87668/MinerTrack.svg?style=flat&label=Github%20Issue)](https://gitHub.com/At87668/MinerTrack/issues/) [![GitHub latest commit](https://badgen.net/github/last-commit/At87668/MinerTrack?style=flat&label=Last%20Commit)](https://gitHub.com/At87668/MinerTrack/commit/) [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat&label=Open%20Source%20License)](https://github.com/At87668/MinerTrack/blob/main/LICENSE)
+
+[![Support Server](https://img.shields.io/discord/1302190990639235122.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/MzTea2W9cb)
+
+
+
 ![Image](./Images/Overview.png)
 
 **MinerTrack** is a plugin that will really help you catch those naughty players using Xray on your server in a **different way** from other Anti-Xray plugins. This plugin doesn't hide ores, as hiding ores requires a lot of resources.
@@ -77,7 +85,9 @@ Compared to other AntiXray solutions:
 
 If you encounter any issues or have suggestions for new features, feel free to reach out via SpigotMC or open an issue on the plugin’s GitHub repository.
 
-**Our Discord: [https://discord.gg/MzTea2W9cb](https://discord.gg/MzTea2W9cb)**
+**Join Our Discord: https://discord.gg/MzTea2W9cb**
+
+[![bStats](https://bstats.org/signatures/bukkit/MinerTrack.svg)](https://bstats.org/plugin/bukkit/MinerTrack/23790)
 
 ---
 

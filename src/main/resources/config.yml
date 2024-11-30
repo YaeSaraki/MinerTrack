@@ -53,10 +53,6 @@ xray:
     - DEEPSLATE_EMERALD_ORE
     - DIAMOND_ORE
     - DEEPSLATE_DIAMOND_ORE
-
-  # Traceback duration to analyze potential x-ray behaviors (Unit: minute)
-  # Turning it down will sacrifice detection power to reduce memory footprint, and vice versa.
-  trace_back_length: 10
   
   # Mined length record limit (Unit: block)
   max_path_length: 500
