@@ -1,14 +1,3 @@
-/**
- * DON'T REMOVE THIS
- * 
- * /MinerTrack/src/main/java/link/star_dust/MinerTrack/listeners/MiningListener.java
- * 
- * MinerTrack Source Code - Public under GPLv3 license
- * Original Author: Author87668
- * Contributors: Author87668
- * 
- * DON'T REMOVE THIS
-**/
 package link.star_dust.MinerTrack.listeners;
 
 import link.star_dust.MinerTrack.FoliaCheck;
@@ -197,12 +186,8 @@ public class MiningListener implements Listener {
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
         }
 
-        // 获取矿脉起点和终点
-        Location veinStart = path.isEmpty() ? blockLocation : path.get(0);
-        Location veinEnd = blockLocation;
-
         // 判断是否需要进一步分析挖矿路径
-        if (!isInCave(blockLocation, veinStart, veinEnd, path) && !isSmoothPath(path)) {
+        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
             analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
     }
@@ -231,18 +216,12 @@ public class MiningListener implements Listener {
             // 更新该玩家在该世界的最后矿脉位置
             lastLocations.put(worldName, location);
             lastVeinLocation.put(playerId, lastLocations);
-            
-            if (plugin.getConfigManager().isDebug()) {
-                plugin.getLogger().warning("[DEBUG > New Vein Check] Player mining vein is new vein.");
-            }
             return true; // 是新矿脉
         }
 
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > New Vein Check] Player mining vein is same vein.");
-        }
         return false; // 属于同一矿脉
     }
+
     
     private boolean isSameVein(Location loc1, Location loc2, Material type) {
         if (!loc1.getWorld().equals(loc2.getWorld())) return false;
@@ -277,17 +256,11 @@ public class MiningListener implements Listener {
                 }
             }
         }
-        
         return false;
     }
 
     private boolean isSmoothPath(List<Location> path) {
-        if (path.size() < 2) {
-        	if (plugin.getConfigManager().isDebug()) {
-                plugin.getLogger().warning("[DEBUG > Smooth Path Check] Player mine path is smooth.");
-            }
-        	return true;
-        }
+        if (path.size() < 2) return true;
 
         int totalTurns = 0;
         int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
@@ -311,45 +284,36 @@ public class MiningListener implements Listener {
             lastLocation = currentLocation;
         }
         // 如果转向次数超过阈值，路径视为不平滑
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > Smooth Path Check] Player mine path is not smooth.");
-        }
         return totalTurns < turnThreshold;
     }
     
-    private boolean isInCave(Location currentLocation, Location veinStart, Location veinEnd, List<Location> path) {
-        // 检查空气方块是否超过阈值
+    private boolean isInCaveWithAir(Location location) {
         int airCount = 0;
         int threshold = plugin.getConfigManager().getCaveBypassAirCount();
-        int detectionRange = plugin.getConfigManager().getCaveCheckDetection();
-        boolean caveSkipVL = plugin.getConfigManager().caveSkipVL();
+        int range = plugin.getConfigManager().getCaveCheckDetection();
 
-        int baseX = currentLocation.getBlockX();
-        int baseY = currentLocation.getBlockY();
-        int baseZ = currentLocation.getBlockZ();
+        int baseX = location.getBlockX();
+        int baseY = location.getBlockY();
+        int baseZ = location.getBlockZ();
 
-        for (int x = -detectionRange; x <= detectionRange; x++) {
-            for (int y = -detectionRange; y <= detectionRange; y++) {
-                for (int z = -detectionRange; z <= detectionRange; z++) {
-                    Material type = currentLocation.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
+        for (int x = -range; x <= range; x++) {
+            for (int y = -range; y <= range; y++) {
+                for (int z = -range; z <= range; z++) {
+                    Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
                     if (type == Material.CAVE_AIR) {
                         airCount++;
-                        if (airCount > threshold && caveSkipVL) {
-                            // 如果空气方块超出阈值，认为玩家在洞穴中
-                        	if (plugin.getConfigManager().isDebug()) {
-                                plugin.getLogger().warning("[DEBUG > Cave Air Check] Player is in a cave.");
-                            }
-                            return true;
+                        if (airCount > threshold) {
+                        	if (plugin.getConfigManager().caveSkipVL()) {
+                                return false;
+                        	} else {
+                                return true;
+                        	}
                         }
                     }
                 }
             }
         }
         
-        // 空气块不足，认为玩家不在洞穴中
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > Cave Air Check] Player is not in a cave.");
-        }
         return false;
     }
 
@@ -372,9 +336,6 @@ public class MiningListener implements Listener {
         }
 
         // 如果路径分析通过，继续处理违规逻辑
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > Mining Path Analyze] " + player +" is not in a cave.");
-        }
         int disconnectedSegments = 0;
         double totalDistance = 0.0;
         Location lastLocation = null;
@@ -417,9 +378,6 @@ public class MiningListener implements Listener {
 
             // 如果当前节点可以直接到达终点，则路径联通
             if (current.distance(end) <= maxDistance) {
-            	if (plugin.getConfigManager().isDebug()) {
-                    plugin.getLogger().warning("[DEBUG > Path Connect Check] Path connected.");
-                }
                 return true;
             }
 
@@ -433,9 +391,6 @@ public class MiningListener implements Listener {
         }
 
         // 如果搜索完成后仍未找到连接路径，则不联通
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > Path Connect Check] Path not connected.");
-        }
         return false;
     }
     
@@ -452,9 +407,7 @@ public class MiningListener implements Listener {
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 
-                if (plugin.getConfigManager().isDebug()) {
-                    plugin.getLogger().warning("[DEBUG > Path Reset] Path reset for player: " + playerId + " due to VL=0 and timeout.");
-                }
+                // plugin.getLogger().info("Path reset for player: " + playerId + " due to VL=0 and timeout.");
             }
         }
     }
@@ -464,8 +417,5 @@ public class MiningListener implements Listener {
         violationLevel.put(playerId, violationLevel.getOrDefault(playerId, 0) + amount);
         vlZeroTimestamp.remove(playerId); // When the violation level increases, remove the timestamp with VL of 0
         plugin.getViolationManager().increaseViolationLevel(player, amount, blockType, count, location);
-        if (plugin.getConfigManager().isDebug()) {
-            plugin.getLogger().warning("[DEBUG > Violation Level Increase] " + player + "'s VL added.");
-        }
     }
 }

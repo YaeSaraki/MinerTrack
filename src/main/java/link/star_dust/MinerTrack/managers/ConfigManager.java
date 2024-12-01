@@ -1,14 +1,3 @@
-/**
- * DON'T REMOVE THIS
- * 
- * /MinerTrack/src/main/java/link/star_dust/MinerTrack/managers/ConfigManager.java
- * 
- * MinerTrack Source Code - Public under GPLv3 license
- * Original Author: Author87668
- * Contributors: Author87668
- * 
- * DON'T REMOVE THIS
-**/
 package link.star_dust.MinerTrack.managers;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -64,6 +53,7 @@ public class ConfigManager {
             "xray.worlds.all_unnamed_world",
             "xray.worlds.all_unnamed_world.enable",
             "xray.rare-ores",
+            "xray.trace_back_length",
             "xray.max_path_length",
             "xray.explosion_retention_time",
             "xray.trace_remove",
@@ -79,8 +69,7 @@ public class ConfigManager {
             "xray.decay.amount",
             "xray.decay.factor",
             "xray.decay.use_factor",
-            "xray.decay",
-            "debug-mode"
+            "xray.decay"
         );
 
         for (String key : defaultConfig.getKeys(false)) {
@@ -139,10 +128,6 @@ public class ConfigManager {
     public boolean isKickStrikeLightning() {
         return config.getBoolean("xray.kick-strike-lightning", true);
     }
-    
-    public boolean isDebug() {
-        return config.getBoolean("debug-mode", false);
-    }
 
     public List<String> getRareOres() {
         return config.getStringList("xray.rare-ores");
@@ -153,11 +138,11 @@ public class ConfigManager {
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 2);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
     }
 
     public int getTurnCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 8);
+        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 10);
     }
 
     public int getCaveBypassAirCount() {
