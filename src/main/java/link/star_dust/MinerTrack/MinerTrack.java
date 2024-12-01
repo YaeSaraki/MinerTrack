@@ -1,3 +1,14 @@
+/**
+ * DON'T REMOVE THIS
+ * 
+ * /MinerTrack/src/main/java/link/star_dust/MinerTrack/MinerTrack.java
+ * 
+ * MinerTrack Source Code - Public under GPLv3 license
+ * Original Author: Author87668
+ * Contributors: Author87668
+ * 
+ * DON'T REMOVE THIS
+**/
 package link.star_dust.MinerTrack;
 
 import java.io.BufferedReader;
@@ -59,7 +70,8 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
         getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &aEnabled!"));
         getServer().getConsoleSender().sendMessage(applyColors(""));
-        getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Original Author: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Contributors: Author87668"));
         getServer().getConsoleSender().sendMessage(applyColors(""));
         getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
@@ -150,7 +162,8 @@ public class MinerTrack extends JavaPlugin {
     	getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
     	getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &cDisabled!"));
     	getServer().getConsoleSender().sendMessage(applyColors(""));
-        getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Original Author: Author87668"));
+        getServer().getConsoleSender().sendMessage(applyColors("&7Contributors: Author87668"));
         getServer().getConsoleSender().sendMessage(applyColors(""));
     	getServer().getConsoleSender().sendMessage(applyColors("&a&oGood bye!"));
     	getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));

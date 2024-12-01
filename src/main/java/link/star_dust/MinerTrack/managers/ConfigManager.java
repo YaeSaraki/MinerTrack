@@ -1,3 +1,14 @@
+/**
+ * DON'T REMOVE THIS
+ * 
+ * /MinerTrack/src/main/java/link/star_dust/MinerTrack/managers/ConfigManager.java
+ * 
+ * MinerTrack Source Code - Public under GPLv3 license
+ * Original Author: Author87668
+ * Contributors: Author87668
+ * 
+ * DON'T REMOVE THIS
+**/
 package link.star_dust.MinerTrack.managers;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -68,7 +79,8 @@ public class ConfigManager {
             "xray.decay.amount",
             "xray.decay.factor",
             "xray.decay.use_factor",
-            "xray.decay"
+            "xray.decay",
+            "debug-mode"
         );
 
         for (String key : defaultConfig.getKeys(false)) {
@@ -126,6 +138,10 @@ public class ConfigManager {
 
     public boolean isKickStrikeLightning() {
         return config.getBoolean("xray.kick-strike-lightning", true);
+    }
+    
+    public boolean isDebug() {
+        return config.getBoolean("debug-mode", false);
     }
 
     public List<String> getRareOres() {

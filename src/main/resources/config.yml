@@ -89,3 +89,5 @@ xray:
     3: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 3&7]'
     5: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 5&7]'
     6: 'minertrack kick %player% X-Ray'
+
+debug-mode: false # Don't enable! For solo developer testing only!
