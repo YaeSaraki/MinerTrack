@@ -53,7 +53,6 @@ public class ConfigManager {
             "xray.worlds.all_unnamed_world",
             "xray.worlds.all_unnamed_world.enable",
             "xray.rare-ores",
-            "xray.trace_back_length",
             "xray.max_path_length",
             "xray.explosion_retention_time",
             "xray.trace_remove",
@@ -138,11 +137,11 @@ public class ConfigManager {
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 2);
     }
 
     public int getTurnCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 10);
+        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 8);
     }
 
     public int getCaveBypassAirCount() {

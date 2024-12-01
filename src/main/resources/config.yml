@@ -73,8 +73,8 @@ xray:
 
   # Violation threshold
   ViolationThreshold:
-    turnCountThreshold: 10
-    veinCountThreshold: 3
+    turnCountThreshold: 8
+    veinCountThreshold: 2
 
   # Violation level decay settings (Unit: minute)
   decay:

@@ -186,8 +186,12 @@ public class MiningListener implements Listener {
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
         }
 
+        // 获取矿脉起点和终点
+        Location veinStart = path.isEmpty() ? blockLocation : path.get(0);
+        Location veinEnd = blockLocation;
+
         // 判断是否需要进一步分析挖矿路径
-        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
+        if (!isInCave(blockLocation, veinStart, veinEnd, path) && !isSmoothPath(path)) {
             analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
     }
@@ -287,33 +291,38 @@ public class MiningListener implements Listener {
         return totalTurns < turnThreshold;
     }
     
-    private boolean isInCaveWithAir(Location location) {
+    private boolean isInCave(Location currentLocation, Location veinStart, Location veinEnd, List<Location> path) {
+        // 1. 检查空气方块是否超过阈值
         int airCount = 0;
         int threshold = plugin.getConfigManager().getCaveBypassAirCount();
-        int range = plugin.getConfigManager().getCaveCheckDetection();
+        int detectionRange = plugin.getConfigManager().getCaveCheckDetection();
+        boolean caveSkipVL = plugin.getConfigManager().caveSkipVL();
 
-        int baseX = location.getBlockX();
-        int baseY = location.getBlockY();
-        int baseZ = location.getBlockZ();
+        int baseX = currentLocation.getBlockX();
+        int baseY = currentLocation.getBlockY();
+        int baseZ = currentLocation.getBlockZ();
 
-        for (int x = -range; x <= range; x++) {
-            for (int y = -range; y <= range; y++) {
-                for (int z = -range; z <= range; z++) {
-                    Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
+        for (int x = -detectionRange; x <= detectionRange; x++) {
+            for (int y = -detectionRange; y <= detectionRange; y++) {
+                for (int z = -detectionRange; z <= detectionRange; z++) {
+                    Material type = currentLocation.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
                     if (type == Material.CAVE_AIR) {
                         airCount++;
-                        if (airCount > threshold) {
-                        	if (plugin.getConfigManager().caveSkipVL()) {
-                                return false;
-                        	} else {
-                                return true;
-                        	}
+                        if (airCount > threshold && caveSkipVL) {
+                            // 如果空气方块超出阈值，认为玩家在洞穴中
+                            return true;
                         }
                     }
                 }
             }
         }
-        
+
+        // 2. 如果空气方块不足但路径不联通，仍然判定在洞穴中
+        if (!areVeinsConnected(veinStart, veinEnd, path) && caveSkipVL) {
+            return true;
+        }
+
+        // 3. 空气块不足且路径联通，认为玩家不在洞穴中
         return false;
     }
 
@@ -323,6 +332,8 @@ public class MiningListener implements Listener {
         String worldName = blockLocation.getWorld().getName();
         Location lastVeinLocation = lastVeins.get(worldName);
 
+        /*
+         * 已弃用
         // 如果有上一个矿脉记录，检查路径联通性
         if (lastVeinLocation != null) {
             double veinDistance = lastVeinLocation.distance(blockLocation);
@@ -334,6 +345,7 @@ public class MiningListener implements Listener {
                 }
             }
         }
+        */
 
         // 如果路径分析通过，继续处理违规逻辑
         int disconnectedSegments = 0;
@@ -404,8 +416,43 @@ public class MiningListener implements Listener {
         // 如果搜索完成后未找到联通点，则不联通
         return false;
     }
-
     
+    private boolean areVeinsConnected(Location veinStart, Location veinEnd, List<Location> veinPath) {
+        if (veinStart == null || veinEnd == null || veinPath == null || veinPath.isEmpty()) {
+            return false;
+        }
+
+        double maxDistance = plugin.getConfigManager().getMaxVeinDistance();
+        Set<Location> visited = new HashSet<>();
+        Queue<Location> queue = new LinkedList<>();
+
+        // 将起点加入队列进行广度优先搜索
+        queue.add(veinStart);
+        visited.add(veinStart);
+
+        while (!queue.isEmpty()) {
+            Location current = queue.poll();
+
+            // 如果当前点与终点的距离小于等于最大允许距离，则路径联通
+            if (current.distance(veinEnd) <= maxDistance) {
+                return true;
+            }
+
+            // 遍历矿脉路径中的点，查找与当前点距离符合条件的点
+            for (Location next : veinPath) {
+                if (!visited.contains(next) && current.distance(next) <= maxDistance) {
+                    queue.add(next);
+                    visited.add(next);
+                }
+            }
+        }
+
+        // 如果搜索完成后未找到与终点联通的路径，则不联通
+        return false;
+    }
+
+
+    // 已弃用
     private boolean isPathConnected(Location start, Location end, List<Location> path) {
         // 如果路径为空，直接返回 false
         if (path == null || path.isEmpty()) {
