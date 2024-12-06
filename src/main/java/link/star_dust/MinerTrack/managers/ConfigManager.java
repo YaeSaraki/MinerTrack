@@ -60,7 +60,6 @@ public class ConfigManager {
             "xray.cave-detection",
             "xray.cave-detection.air-threshold",
             "xray.cave-detection.air-detection-range",
-            "xray.cave-detection.max_path_distance",
             "xray.cave-detection.cave_check_skip_vl",
             "xray.ViolationThreshold",
             "xray.ViolationThreshold.turnCountThreshold",

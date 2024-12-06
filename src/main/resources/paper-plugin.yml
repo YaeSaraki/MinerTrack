@@ -1,0 +1,46 @@
+name: MinerTrack
+version: 1.5.3-beta
+main: link.star_dust.MinerTrack.MinerTrack
+api-version: 1.18
+folia-supported: true
+description: The Advanced Anti-Xray that you need, have you ever dreamed of a powerful anti-xray?
+commands:
+  minertrack:
+    description: Plugin's main command
+    aliases: [mt, mtrack]
+    usage: "/minertrack <command>"
+    permission: minertrack.use
+    permissions:
+      minertrack.use:
+        description: Permission to access the root command "/mtrack"
+        default: op
+      minertrack.check:
+        description: Allow player to use /mtrack check
+        default: op
+      minertrack.kick:
+        description: Allow player to use /mtrack kick
+        default: op
+      minertrack.help:
+        description: Allow player to use /mtrack help
+        default: op
+      minertrack.reset:
+        description: Allow player to use /mtrack reset
+        default: op
+      minertrack.sendnotify:
+        description: Allow player to use /mtrack notify
+        default: op
+      minertrack.verbose:
+        description: Allow player to use /mtrack verbose
+        default: op
+      minertrack.reload:
+        description: Allow player to use /mtrack reload
+        default: op
+      minertrack.bypass:
+        description: Bypass the X-Ray detection
+        default: op
+      minertrack.notify:
+        description: Receive notify information and verbose information
+        default: op
+      minertrack.checkupdate:
+        description: Allow player to receive update information and use /mtrack update
+        default: op

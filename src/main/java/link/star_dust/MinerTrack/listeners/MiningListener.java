@@ -323,6 +323,8 @@ public class MiningListener implements Listener {
         String worldName = blockLocation.getWorld().getName();
         Location lastVeinLocation = lastVeins.get(worldName);
 
+        // 暂时不使用
+        /*
         // 如果有上一个矿脉记录，检查路径联通性
         if (lastVeinLocation != null) {
             double veinDistance = lastVeinLocation.distance(blockLocation);
@@ -334,6 +336,7 @@ public class MiningListener implements Listener {
                 }
             }
         }
+        */
 
         // 如果路径分析通过，继续处理违规逻辑
         int disconnectedSegments = 0;
