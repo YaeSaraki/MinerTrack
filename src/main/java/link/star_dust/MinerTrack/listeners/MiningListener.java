@@ -7,7 +7,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.EnderCrystal;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.WitherSkull;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -42,8 +48,8 @@ public class MiningListener implements Listener {
                     return;
                 }
                 checkAndResetPaths();
-                cleanupExplosionExposedOres(); // Periodically clean up explosion-exposed ores
                 cleanupExpiredPaths();
+                cleanupExpiredExplosions();
             }, interval, interval);
         } else {
             // Use reflection to call the Spigot scheduling logic
@@ -61,8 +67,8 @@ public class MiningListener implements Listener {
                     plugin,
                     (Runnable) () -> {
                         checkAndResetPaths();
-                        cleanupExplosionExposedOres();
                         cleanupExpiredPaths();
+                        cleanupExpiredExplosions();
                     },
                     (long) interval,
                     (long) interval
@@ -87,6 +93,10 @@ public class MiningListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
+    	if (!plugin.getConfig().getBoolean("xray.enable", true)) {
+            return;
+        }
+    	
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
@@ -100,6 +110,81 @@ public class MiningListener implements Listener {
     
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
+        Entity entity = event.getEntity();
+        Player sourcePlayer = null;
+
+        // 检查是否由玩家触发的 TNT 爆炸
+        if (entity instanceof TNTPrimed tnt) {
+            if (tnt.getSource() instanceof Player player) {
+                sourcePlayer = player;
+            }
+        } else if (entity instanceof ExplosiveMinecart minecart) {
+            if (((TNTPrimed) minecart).getSource() instanceof Player player) {
+                sourcePlayer = player;
+            }
+        } else if (entity instanceof EnderCrystal || entity instanceof WitherSkull) {
+            return; // 忽略非玩家控制的特殊爆炸
+        }
+
+        if (sourcePlayer != null) {
+            UUID playerId = sourcePlayer.getUniqueId();
+            List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
+            long currentTime = System.currentTimeMillis();
+            int retentionTime = plugin.getConfig().getInt("xray.explosion.explosion_retention_time", 600) * 1000; // 默认10分钟
+            int totalBlocks = 0;
+            int rareOresCount = 0;
+
+            // 统计爆炸影响的方块数量和稀有矿物数量
+            for (Block block : event.blockList()) {
+                totalBlocks++;
+                if (rareOres.contains(block.getType().name())) {
+                    rareOresCount++;
+                    explosionExposedOres.put(block.getLocation(), currentTime + retentionTime);
+                }
+            }
+
+            // 如果爆炸范围内没有方块，直接返回
+            if (totalBlocks == 0) return;
+
+            // 计算稀有矿物命中率
+            double hitRate = (double) rareOresCount / totalBlocks;
+
+            // 判断命中率是否异常
+            double suspiciousThreshold = plugin.getConfig().getDouble("xray.explosion.suspicious_hit_rate", 0.1); // 默认10%
+            if (hitRate > suspiciousThreshold) {
+                handleSuspiciousExplosion(sourcePlayer, rareOresCount, hitRate);
+            }
+        }
+    }
+    
+    private void handleSuspiciousExplosion(Player player, int rareOresCount, double hitRate) {
+        UUID playerId = player.getUniqueId();
+        int currentVL = violationLevel.getOrDefault(playerId, 0);
+
+        // 动态增加 VL，基于稀有矿物数量和命中率
+        int increaseAmount = calculateExplosionVLIncrease(rareOresCount, hitRate);
+        violationLevel.put(playerId, currentVL + increaseAmount);
+
+        // 记录日志或发送警告
+        //plugin.getLogger().warning(player.getName() + " 的爆炸行为异常！稀有矿物数量: " + rareOresCount + "，命中率: " + String.format("%.2f%%", hitRate * 100) + " (VL 增加 " + increaseAmount + ")");
+    }
+
+    private int calculateExplosionVLIncrease(int rareOresCount, double hitRate) {
+        // 基于矿物数量和命中率计算 VL 增长
+        double baseRate = plugin.getConfig().getDouble("xray.explosion.base_vl_rate", 2.0);
+        return (int) Math.ceil(rareOresCount * hitRate * baseRate);
+    }
+
+    private void cleanupExpiredExplosions() {
+        long currentTime = System.currentTimeMillis();
+        explosionExposedOres.entrySet().removeIf(entry -> currentTime > entry.getValue());
+
+        // plugin.getLogger().info("清理了过期的爆破记录。当前记录总数: " + explosionExposedOres.size());
+    }
+    
+    /* 过时的逻辑
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
         // Record all ore locations exposed by the explosion
         List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
         long currentTime = System.currentTimeMillis();
@@ -111,6 +196,7 @@ public class MiningListener implements Listener {
             }
         }
     }
+    */
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
@@ -199,11 +285,6 @@ public class MiningListener implements Listener {
         miningPath.forEach((playerId, paths) -> {
             paths.values().forEach(path -> path.removeIf(loc -> now - loc.getWorld().getTime() > traceBackLength));
         });
-    }
-    
-    private void cleanupExplosionExposedOres() {
-        long currentTime = System.currentTimeMillis();
-        explosionExposedOres.entrySet().removeIf(entry -> entry.getValue() < currentTime);
     }
 
     private boolean isNewVein(UUID playerId, String worldName, Location location, Material oreType) {

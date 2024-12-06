@@ -55,7 +55,6 @@ public class ConfigManager {
             "xray.rare-ores",
             "xray.trace_back_length",
             "xray.max_path_length",
-            "xray.explosion_retention_time",
             "xray.trace_remove",
             "xray.cave-detection",
             "xray.cave-detection.air-threshold",
@@ -68,7 +67,12 @@ public class ConfigManager {
             "xray.decay.amount",
             "xray.decay.factor",
             "xray.decay.use_factor",
-            "xray.decay"
+            "xray.decay",
+            "explosion.entity-explode-check",
+            "explosion.explosion_retention_time",
+            "explosion.base_vl_rate",
+            "explosion.suspicious_hit_rate",
+            "explosion"
         );
 
         for (String key : defaultConfig.getKeys(false)) {

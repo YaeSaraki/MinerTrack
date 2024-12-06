@@ -1,8 +1,12 @@
 name: MinerTrack
 version: 1.5.3-beta
 main: link.star_dust.MinerTrack.MinerTrack
+authors: [Author87668]
+contributors: []
+website: https://modrinth.com/plugin/minertrack
 api-version: 1.18
 folia-supported: true
+default-permission: false
 description: The Advanced Anti-Xray that you need, have you ever dreamed of a powerful anti-xray?
 commands:
   minertrack:

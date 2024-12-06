@@ -1,9 +1,11 @@
 package link.star_dust.MinerTrack.managers;
 
+import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -18,12 +20,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 public class ViolationManager {
     private final MinerTrack plugin;
     private final static Map<UUID, Integer> violationLevels = new HashMap<>();
-    private final Map<UUID, BukkitRunnable> vlDecayTasks = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
+    private final Map<UUID, Object> vlDecayTasks = new HashMap<>();
 
     private String currentLogFileName;
 
@@ -125,17 +130,15 @@ public class ViolationManager {
         return violationLevels.getOrDefault(player.getUniqueId(), 0);
     }
 
-    public void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
+    public void increaseViolationLevel(Player player, int increment, String blockType, int count, Location location) {
         UUID playerId = player.getUniqueId();
-        int newLevel = getViolationLevel(player) + amount;
-        violationLevels.put(playerId, newLevel);
 
         // 移除 VL=0 的时间戳
         vlZeroTimestamp.remove(playerId);
 
         // 取消当前的 VL 衰减任务
         if (vlDecayTasks.containsKey(playerId)) {
-            vlDecayTasks.get(playerId).cancel();
+            ((BukkitRunnable) vlDecayTasks.get(playerId)).cancel();
             vlDecayTasks.remove(playerId);
         }
 
@@ -143,14 +146,20 @@ public class ViolationManager {
         scheduleVLDecayTask(player);
 
         // 处理 VL 增加后的其他逻辑
+        int oldLevel = getViolationLevel(playerId);
+        int newLevel = oldLevel + increment;
+        violationLevels.put(playerId, newLevel);
+
+        // 处理 VL 增加后的其他逻辑，覆盖所有从 oldLevel+1 到 newLevel 的阈值
         for (String key : plugin.getConfig().getConfigurationSection("xray.commands").getKeys(false)) {
             int threshold = Integer.parseInt(key);
-            if (newLevel == threshold) {
+            if (threshold > oldLevel && threshold <= newLevel) {
                 String command = plugin.getConfig().getString("xray.commands." + key)
                     .replace("%player%", player.getName());
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             }
         }
+
 
         if (newLevel >= 1) {
             String verboseFormat = plugin.getLanguageManager().getPrefixedMessage("verbose-format");
@@ -159,7 +168,7 @@ public class ViolationManager {
             String formattedMessage = verboseFormat
                 .replace("%player%", player.getName())
                 .replace("%vl%", String.valueOf(newLevel))
-                .replace("%add_vl%", String.valueOf(amount))
+                .replace("%add_vl%", String.valueOf(increment))
                 .replace("%block_type%", blockType)
                 .replace("%count%", String.valueOf(count))
                 .replace("%world%", worldName)
@@ -178,7 +187,7 @@ public class ViolationManager {
                 Bukkit.getConsoleSender().sendMessage(formattedMessage);
             }
 
-            logViolation(player, newLevel, amount, blockType, count, location);
+            logViolation(player, newLevel, increment, blockType, count, location);
         }
     }
     
@@ -196,45 +205,72 @@ public class ViolationManager {
         double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9); // 非线性衰减比例
         boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
 
-        BukkitRunnable decayTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                int currentVL = violationLevels.getOrDefault(playerId, 0);
+        Runnable decayRunnable = () -> {
+            int currentVL = violationLevels.getOrDefault(playerId, 0);
 
-                if (currentVL > 0) {
-                    // 根据配置选择线性或非线性衰减
-                    int newVL = useFactor
+            if (currentVL > 0) {
+                // 根据配置选择线性或非线性衰减
+                int newVL = useFactor
                         ? (int) Math.ceil(currentVL * decayFactor) // 非线性衰减
                         : Math.max(0, currentVL - decayAmount);   // 线性衰减
 
-                    violationLevels.put(playerId, newVL);
+                violationLevels.put(playerId, newVL);
 
-                    // 如果 VL 归零，记录时间戳并移除任务
-                    if (newVL == 0) {
-                        vlZeroTimestamp.put(playerId, System.currentTimeMillis());
-                        plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
-
-                        cancel();
-                        vlDecayTasks.remove(playerId);
-                    }
-                } else {
-                    // VL 已经为 0，任务无需继续
-                    cancel();
-                    vlDecayTasks.remove(playerId);
+                // 如果 VL 归零，记录时间戳并移除任务
+                if (newVL == 0) {
+                    vlZeroTimestamp.put(playerId, System.currentTimeMillis());
+                    plugin.getLogger().info("VL=0 timestamp recorded for player: " + player.getName());
+                    cancelVLDecayTask(playerId);
                 }
+            } else {
+                // VL 已经为 0，任务无需继续
+                cancelVLDecayTask(playerId);
             }
         };
 
-        // 延迟启动任务，并设置间隔
-        decayTask.runTaskTimer(plugin, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
-        vlDecayTasks.put(playerId, decayTask);
+        if (FoliaCheck.isFolia()) {
+            // 使用 Folia 全局调度器
+            ScheduledTask task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, taskScheduler -> {
+                if (!plugin.isEnabled()) {
+                    taskScheduler.cancel();
+                    return;
+                }
+                decayRunnable.run();
+            }, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
+
+            vlDecayTasks.put(playerId, task);
+        } else {
+            // 使用 Spigot 的调度器
+            @SuppressWarnings("deprecation")
+			BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, decayRunnable, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
+            vlDecayTasks.put(playerId, task);
+        }
 
         // 记录任务启动日志
-        /*plugin.getLogger().info(String.format(
-            "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
-            player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
-        ));*/
+        plugin.getLogger().info(String.format(
+                "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
+                player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
+        ));
     }
+
+    private void cancelVLDecayTask(UUID playerId) {
+        // 获取任务对象
+        Object task = vlDecayTasks.remove(playerId);
+
+        if (task != null) {
+            if (task instanceof ScheduledTask) {
+                // Folia 调度任务
+                ((ScheduledTask) task).cancel();
+            } else if (task instanceof BukkitTask) {
+                // Spigot 调度任务
+                ((BukkitTask) task).cancel();
+            } else {
+                // 未知类型任务
+                plugin.getLogger().warning("Unknown task type for player: " + playerId);
+            }
+        }
+    }
+
 
 
     public void resetViolationLevel(Player player) {

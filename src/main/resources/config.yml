@@ -57,17 +57,21 @@ xray:
   # Mined length record limit (Unit: block)
   max_path_length: 500
   
-  # Information is removed after {n} seconds after the mineral is exposed to the explosion
-  explosion_retention_time: 600
-  
+  # Explosion Detection
+  explosion:
+    explosion_retention_time: 600 # Information is removed after {n} seconds after the mineral is exposed to the explosion
+    entity-explode-check: true    # Whether or not the mining of minerals caused by explosions counts towards player mining?
+    base_vl_rate: 2.0             # VL multiplier when the player's blast hit rate is suspicious
+    suspicious_hit_rate: 0.1      # Suspicious when the player hits what the percentage is? (0.1 = 10%)
+    
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 15
   
   # Cave Detection
   cave-detection:
     # Satisfying the air-threshold will think they are in a cave.
-    air-threshold: 4 # When the number of cave air blocks reaches several, the player is considered to be in a cave?
-    air-detection-range: 2 # 3 = 7x7x7, 2 = 5x5x5
+    air-threshold: 4         # When the number of cave air blocks reaches several, the player is considered to be in a cave?
+    air-detection-range: 2   # 3 = 7x7x7, 2 = 5x5x5
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
 
   # Violation threshold
