@@ -27,6 +27,7 @@ public class LanguageManager {
     private final MinerTrack plugin;
     private YamlConfiguration languageConfig;
     private final File languageFile;
+    private static LanguageManager instance = null;
 
     public LanguageManager(MinerTrack plugin) {
         this.plugin = plugin;
@@ -56,6 +57,17 @@ public class LanguageManager {
 
         // Save only the custom values back to file
         saveCustomLanguageFile();
+    }
+    
+    public static LanguageManager getInstance(MinerTrack plugin) {
+		if (instance == null) {
+            instance = new LanguageManager(plugin);
+        }
+        return instance;
+    }
+    
+    public void reloadLanguage() {
+    	reloadLanguageFile();
     }
 
     public String getKickMessage(String playerName) {

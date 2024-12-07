@@ -12,6 +12,7 @@
 package link.star_dust.MinerTrack.commands;
 
 import link.star_dust.MinerTrack.MinerTrack;
+import link.star_dust.MinerTrack.managers.LanguageManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -155,6 +156,7 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 plugin.reloadConfig();
+                LanguageManager.getInstance(plugin).reloadLanguage();
                 sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("config-reloaded"));
                 break;
 
