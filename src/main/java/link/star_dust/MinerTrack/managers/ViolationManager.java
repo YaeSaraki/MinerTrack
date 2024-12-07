@@ -233,7 +233,7 @@ public class ViolationManager {
                     // 如果 VL 归零，记录时间戳并移除任务
                     if (newVL == 0) {
                         vlZeroTimestamp.put(playerId, System.currentTimeMillis());
-                        plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
+                        //plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
 
                         cancel();
                         vlDecayTasks.remove(playerId);

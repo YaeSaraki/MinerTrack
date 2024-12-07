@@ -149,7 +149,6 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                 }
                 break;
 
-
             case "reload":
                 if (!sender.hasPermission("minertrack.reload")) {
                     sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("no-permission"));

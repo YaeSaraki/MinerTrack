@@ -284,7 +284,7 @@ public class MiningListener implements Listener {
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
 
             if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
-            	analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            	analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
             }
         }
     }
@@ -348,6 +348,47 @@ public class MiningListener implements Listener {
             }
         }
         return false;
+    }
+    
+    public int countVeinBlocks(Location startLocation, Material type) {
+        if (startLocation == null || !startLocation.getBlock().getType().equals(type)) {
+            return 0; // 起始位置无效或矿物类型不匹配
+        }
+
+        double maxDistance = plugin.getConfigManager().getMaxVeinDistance(); // 可配置的矿脉连通距离
+        Set<Location> visited = new HashSet<>();
+        Queue<Location> toVisit = new LinkedList<>();
+        toVisit.add(startLocation);
+
+        int blockCount = 0;
+
+        while (!toVisit.isEmpty()) {
+            Location current = toVisit.poll();
+            if (visited.contains(current)) continue;
+            visited.add(current);
+
+            // 如果当前方块类型匹配，计入矿脉总数
+            if (current.getBlock().getType().equals(type)) {
+                blockCount++;
+
+                // 遍历邻接方块，包括直接邻接和角点
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dz = -1; dz <= 1; dz++) {
+                            if (dx == 0 && dy == 0 && dz == 0) continue; // 跳过当前方块
+
+                            Location neighbor = current.clone().add(dx, dy, dz);
+                            if (!visited.contains(neighbor) 
+                                    && neighbor.distance(current) <= maxDistance 
+                                    && neighbor.getBlock().getType().equals(type)) {
+                                toVisit.add(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return blockCount;
     }
 
     /*
@@ -495,6 +536,7 @@ public class MiningListener implements Listener {
 
             if (lastZeroTime != null && vl == 0 && now - lastZeroTime > traceRemoveMillis) {
                 //miningPath.remove(playerId); // 清除路径
+            	blockCount = 0; // 清除稀有矿石计数
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 

@@ -25,7 +25,7 @@ kick-format: '&b%player% &7kicked out of the server for allegedly using X-Ray!'
 verbose-format: '&7%player% failed &fX-Ray &7check &7VL:%vl%&b(+%add_vl%) &7Block:&6%block_type%&ex%count%&7(Vein&ax%vein_count%&7) &7World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'
 
 # Define the log format
-log-format: '%year%-%month%-%day% %hour%:%minute%:%second% | %player% failed X-Ray check VL:%vl%(+%add_vl%) Block:%block_type%x%count% World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'
+log-format: '%year%-%month%-%day% %hour%:%minute%:%second% | %player% failed X-Ray check VL:%vl%(+%add_vl%) Block:%block_type%x%count%(Veinx%vein_count%) World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'
 
 # Should MinerTrack broadcast a message when a player is kicked?
 kick-broadcast: true
@@ -54,7 +54,7 @@ violation-level: "&e{player}'s violation level is {level}."
 
 player-not-found: "&cPlayer {player} not found."
 
-config-reloaded: "&aConfiguration reloaded successfully."
+config-reloaded: "&aConfiguration and Language reloaded successfully."
 
 unknown-command: "&cUnknown subcommand. Use /mtrack help for a list of commands."
 
