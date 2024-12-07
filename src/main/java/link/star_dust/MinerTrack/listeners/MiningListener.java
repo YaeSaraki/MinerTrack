@@ -536,7 +536,6 @@ public class MiningListener implements Listener {
 
             if (lastZeroTime != null && vl == 0 && now - lastZeroTime > traceRemoveMillis) {
                 //miningPath.remove(playerId); // 清除路径
-            	blockCount = 0; // 清除稀有矿石计数
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 
