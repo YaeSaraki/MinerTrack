@@ -22,7 +22,7 @@ prefix: '&8[&9&lMiner&c&lTrack&8]&r '
 kick-format: '&b%player% &7kicked out of the server for allegedly using X-Ray!'
 
 # Define the verbose message format
-verbose-format: '&7%player% failed &fX-Ray &7check &7VL:%vl%&b(+%add_vl%) &7Block:&6%block_type%&ex%count% &7World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'
+verbose-format: '&7%player% failed &fX-Ray &7check &7VL:%vl%&b(+%add_vl%) &7Block:&6%block_type%&ex%count%&7(Vein&ax%vein_count%&7) &7World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'
 
 # Define the log format
 log-format: '%year%-%month%-%day% %hour%:%minute%:%second% | %player% failed X-Ray check VL:%vl%(+%add_vl%) Block:%block_type%x%count% World: %world% Pos: X%pos_x% Y%pos_y% Z%pos_z%'

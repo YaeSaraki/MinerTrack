@@ -313,7 +313,6 @@ public class MiningListener implements Listener {
 
         return false; // 属于同一矿脉
     }
-
     
     private boolean isSameVein(Location loc1, Location loc2, Material type) {
         if (!loc1.getWorld().equals(loc2.getWorld())) return false;
@@ -447,7 +446,9 @@ public class MiningListener implements Listener {
         }
 
         int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-        increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
+        if (isNewVein(playerId, worldName, lastLocation, blockType)) {
+            increaseViolationLevel(player, 1, blockType.name(), count, veinCount, blockLocation);
+        }
         //minedVeinCount.put(playerId, 0);
     }
     
@@ -504,10 +505,10 @@ public class MiningListener implements Listener {
         }
     }
 
-    private void increaseViolationLevel(Player player, int amount, String blockType, int count, Location location) {
+    private void increaseViolationLevel(Player player, int amount, String blockType, int count, int vein, Location location) {
         UUID playerId = player.getUniqueId();
         violationLevel.put(playerId, violationLevel.getOrDefault(playerId, 0) + amount);
         vlZeroTimestamp.remove(playerId); // When the violation level increases, remove the timestamp with VL of 0
-        plugin.getViolationManager().increaseViolationLevel(player, amount, blockType, count, location);
+        plugin.getViolationManager().increaseViolationLevel(player, amount, blockType, count, vein, location);
     }
 }

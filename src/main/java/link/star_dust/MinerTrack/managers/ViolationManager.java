@@ -141,7 +141,7 @@ public class ViolationManager {
         return violationLevels.getOrDefault(player.getUniqueId(), 0);
     }
 
-    public void increaseViolationLevel(Player player, int increment, String blockType, int count, Location location) {
+    public void increaseViolationLevel(Player player, int increment, String blockType, int count, int vein, Location location) {
         UUID playerId = player.getUniqueId();
 
         // 移除 VL=0 的时间戳
@@ -182,6 +182,7 @@ public class ViolationManager {
                 .replace("%add_vl%", String.valueOf(increment))
                 .replace("%block_type%", blockType)
                 .replace("%count%", String.valueOf(count))
+                .replace("%vein_count%", String.valueOf(vein))
                 .replace("%world%", worldName)
                 .replace("%pos_x%", String.valueOf(location.getBlockX()))
                 .replace("%pos_y%", String.valueOf(location.getBlockY()))
