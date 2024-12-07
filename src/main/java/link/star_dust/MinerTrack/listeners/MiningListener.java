@@ -278,14 +278,13 @@ public class MiningListener implements Listener {
         }
 
         // 检测新矿脉
-        if (isNewVein(playerId, worldName, blockLocation, blockType)) {
-            minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
-            lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
-            lastVeinLocation.get(playerId).put(worldName, blockLocation);
-
-            if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
-            	analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
-            }
+        if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
+        	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
+        		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
+        		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
+        		lastVeinLocation.get(playerId).put(worldName, blockLocation);
+        		analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
+        	}
         }
     }
 
@@ -436,17 +435,19 @@ public class MiningListener implements Listener {
                     Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
                     if (type == Material.CAVE_AIR) {
                         airCount++;
-                        if (airCount > threshold) {
-                        	if (!plugin.getConfigManager().caveSkipVL()) {
-                                return false;
-                        	} else {
-                                return true;
-                        	}
-                        }
                     }
                 }
             }
         }
+        
+        if (airCount > threshold) {
+        	if (!plugin.getConfigManager().caveSkipVL()) {
+                return false;
+        	} else {
+                return true;
+        	}
+        }
+        
         return false;
     }
     
@@ -456,6 +457,7 @@ public class MiningListener implements Listener {
         String worldName = blockLocation.getWorld().getName();
         Location lastVeinLocation = lastVeins.get(worldName);
 
+        /*
         // 如果有上一个矿脉记录，检查路径联通性
         if (lastVeinLocation != null) {
             double veinDistance = lastVeinLocation.distance(blockLocation);
@@ -466,7 +468,7 @@ public class MiningListener implements Listener {
                     return;
                 }
             }
-        }
+        }*/
 
         // 如果路径分析通过，继续处理违规逻辑
         int disconnectedSegments = 0;
