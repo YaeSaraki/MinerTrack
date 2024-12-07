@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -122,7 +123,7 @@ public class MiningListener implements Listener {
             if (((TNTPrimed) minecart).getSource() instanceof Player player) {
                 sourcePlayer = player;
             }
-        } else if (entity instanceof EnderCrystal || entity instanceof WitherSkull) {
+        } else if (entity instanceof EnderCrystal || entity instanceof WitherSkull || entity instanceof Creeper) {
             return; // 忽略非玩家控制的特殊爆炸
         }
 
@@ -272,8 +273,7 @@ public class MiningListener implements Listener {
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
         }
 
-        // 判断是否需要进一步分析挖矿路径
-        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
+        if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
             analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
         }
     }
@@ -340,6 +340,7 @@ public class MiningListener implements Listener {
         return false;
     }
 
+    /*
     private boolean isSmoothPath(List<Location> path) {
         if (path.size() < 2) return true;
 
@@ -367,6 +368,7 @@ public class MiningListener implements Listener {
         // 如果转向次数超过阈值，路径视为不平滑
         return totalTurns < turnThreshold;
     }
+    */
     
     private boolean isInCaveWithAir(Location location) {
         int airCount = 0;
@@ -397,15 +399,13 @@ public class MiningListener implements Listener {
         
         return false;
     }
-
+    
     private void analyzeMiningPath(Player player, List<Location> path, Material blockType, int count, Location blockLocation) {
         UUID playerId = player.getUniqueId();
         Map<String, Location> lastVeins = lastVeinLocation.getOrDefault(playerId, new HashMap<>());
         String worldName = blockLocation.getWorld().getName();
         Location lastVeinLocation = lastVeins.get(worldName);
 
-        // 暂时不使用
-        /*
         // 如果有上一个矿脉记录，检查路径联通性
         if (lastVeinLocation != null) {
             double veinDistance = lastVeinLocation.distance(blockLocation);
@@ -417,7 +417,6 @@ public class MiningListener implements Listener {
                 }
             }
         }
-        */
 
         // 如果路径分析通过，继续处理违规逻辑
         int disconnectedSegments = 0;
@@ -437,10 +436,8 @@ public class MiningListener implements Listener {
         }
 
         int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-        if (veinCount > plugin.getConfigManager().getVeinCountThreshold() && disconnectedSegments > 2) {
-            increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
-            minedVeinCount.put(playerId, 0);
-        }
+        increaseViolationLevel(player, 1, blockType.name(), count, blockLocation);
+        //minedVeinCount.put(playerId, 0);
     }
     
     private boolean isPathConnected(Location start, Location end, List<Location> path) {
@@ -487,7 +484,7 @@ public class MiningListener implements Listener {
             int vl = ViolationManager.getViolationLevel(playerId);
 
             if (lastZeroTime != null && vl == 0 && now - lastZeroTime > traceRemoveMillis) {
-                miningPath.remove(playerId); // 清除路径
+                //miningPath.remove(playerId); // 清除路径
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 

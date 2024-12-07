@@ -28,6 +28,12 @@ delete_time: 30
 # Deny Bypass Permission - force checks on all players, including Operators.
 disable_bypass_permission: false
 
+#############################################################################################################################
+##        ##   This plugin in order to capture XRayer quickly, might generate false positives for players who are lucky!   ##
+##  Warn  ##   Be careful not to set the VL threshold too low!                                                             ##
+##        ##   Don't detect for common ores either, you should only detect for rare ores!                                  ##
+#############################################################################################################################
+
 xray:
   enable: true  # Enable X-ray detection
 
@@ -57,12 +63,12 @@ xray:
   # Mined length record limit (Unit: block)
   max_path_length: 500
   
-  # Explosion Detection
+  # Explosion Detection (alpha)
   explosion:
-    explosion_retention_time: 600 # Information is removed after {n} seconds after the mineral is exposed to the explosion
-    entity-explode-check: true    # Whether or not the mining of minerals caused by explosions counts towards player mining?
-    base_vl_rate: 2.0             # VL multiplier when the player's blast hit rate is suspicious
-    suspicious_hit_rate: 0.1      # Suspicious when the player hits what the percentage is? (0.1 = 10%)
+    explosion_retention_time: 600  # Information is removed after {n} seconds after the mineral is exposed to the explosion
+    entity-explode-check: false    # Whether or not the mining of minerals caused by explosions counts towards player mining?
+    base_vl_rate: 2.0              # VL multiplier when the player's blast hit rate is suspicious
+    suspicious_hit_rate: 0.1       # Suspicious when the player hits what the percentage is? (0.1 = 10%)
     
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 15
@@ -74,18 +80,12 @@ xray:
     air-detection-range: 2   # 3 = 7x7x7, 2 = 5x5x5
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
 
-  # Violation threshold
-  ViolationThreshold:
-    turnCountThreshold: 10
-    veinCountThreshold: 3
-
   # Violation level decay settings (Unit: minute)
   decay:
-    interval: 5         # The interval between decay tasks (in minutes)
+    interval: 3         # The interval between decay tasks (in minutes)
     amount: 1           # The value of each linear falloff
     use_factor: false   # Whether to enable nonlinear attenuation
     factor: 0.9         # Nonlinear decay scale (only works when use_factor=true)
-
 
   # Commands executed at specified violation thresholds
   commands:
