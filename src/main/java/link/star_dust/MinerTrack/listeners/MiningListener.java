@@ -282,10 +282,10 @@ public class MiningListener implements Listener {
             minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
             lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
             lastVeinLocation.get(playerId).put(worldName, blockLocation);
-        }
 
-        if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
-            analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
+            	analyzeMiningPath(player, path, blockType, path.size(), blockLocation);
+            }
         }
     }
 
@@ -446,9 +446,7 @@ public class MiningListener implements Listener {
         }
 
         int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-        if (isNewVein(playerId, worldName, lastLocation, blockType)) {
-            increaseViolationLevel(player, 1, blockType.name(), count, veinCount, blockLocation);
-        }
+        increaseViolationLevel(player, 1, blockType.name(), count, veinCount, blockLocation);
         //minedVeinCount.put(playerId, 0);
     }
     
