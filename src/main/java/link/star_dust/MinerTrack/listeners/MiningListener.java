@@ -437,7 +437,7 @@ public class MiningListener implements Listener {
                     if (type == Material.CAVE_AIR) {
                         airCount++;
                         if (airCount > threshold) {
-                        	if (plugin.getConfigManager().caveSkipVL()) {
+                        	if (!plugin.getConfigManager().caveSkipVL()) {
                                 return false;
                         	} else {
                                 return true;
@@ -447,7 +447,6 @@ public class MiningListener implements Listener {
                 }
             }
         }
-        
         return false;
     }
     

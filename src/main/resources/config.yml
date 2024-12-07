@@ -77,7 +77,7 @@ xray:
   cave-detection:
     # Satisfying the air-threshold will think they are in a cave.
     air-threshold: 4         # When the number of cave air blocks reaches several, the player is considered to be in a cave?
-    air-detection-range: 2   # 3 = 7x7x7, 2 = 5x5x5
+    air-detection-range: 3   # 3 = 7x7x7, 2 = 5x5x5
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
 
   # Violation level decay settings (Unit: minute)
