@@ -535,7 +535,7 @@ public class MiningListener implements Listener {
             int vl = ViolationManager.getViolationLevel(playerId);
 
             if (lastZeroTime != null && vl == 0 && now - lastZeroTime > traceRemoveMillis) {
-                //miningPath.remove(playerId); // 清除路径
+                miningPath.remove(playerId); // 清除路径
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
 
