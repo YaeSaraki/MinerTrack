@@ -32,6 +32,7 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
@@ -80,7 +81,11 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors(""));
         getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
-        
+    }
+    
+    @EventHandler
+    public void onServerLoad(ServerLoadEvent event) {
+        getLogger().info("Server has finished loading. Checking for updates...");
         checkForUpdates(null);
     }
     
