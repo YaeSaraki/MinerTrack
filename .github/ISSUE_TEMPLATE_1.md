@@ -1,6 +1,12 @@
+---
+name: BUG Report
+about: If you want to report a bug, select this.
+---
+
 ### [Issue Title]
-- [ ] Tested on Spigot
-- [ ] Tested with this plugin only
+
+- [x] Tested on Spigot
+- [x] Tested with this plugin only
 #### Description
 
 [Description]
