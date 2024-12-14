@@ -61,8 +61,8 @@ public class MinerTrack extends JavaPlugin {
         violationManager = new ViolationManager(this);
         notifier = new Notifier(this);
         updateManager = new UpdateManager(this);
-        miningDetectionExtension = new MiningDetectionExtension(this);
-        miningDetectionExtension.register();
+        //miningDetectionExtension = new MiningDetectionExtension(this);
+        //miningDetectionExtension.register();
         
         int pluginId = 23790;
         new Metrics(this, pluginId);

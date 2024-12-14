@@ -47,11 +47,11 @@ public class MiningListener implements Listener {
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
     private final Map<Location, Long> explosionExposedOres = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
-    private final MiningDetectionExtension ex;
+    //private final MiningDetectionExtension ex;
     
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
-		this.ex = plugin.miningDetectionExtension;
+		//this.ex = plugin.miningDetectionExtension;
         int interval = 20 * 60; // Scheduling interval (unit: tick)
 
         if (FoliaCheck.isFolia()) {

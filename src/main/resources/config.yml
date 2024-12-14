@@ -62,9 +62,6 @@ xray:
   
   # Mined length record limit (Unit: block)
   max_path_length: 500
-  
-  mine:
-    suspicionThreshold: 100 # Suspicion threshold for player
 
   # Explosion Detection (alpha)
   explosion:
@@ -79,6 +76,7 @@ xray:
   # Cave Detection
   cave-detection:
     # Satisfying the air-threshold will think they are in a cave.
+    max_vein_distance: 5     # When two veins are close together, VL is not increased.
     air-threshold: 14        # When the number of air blocks reaches several, the player is considered to be in a cave?
     CaveAirMultiplier: 5     # If cave air is found, regarded as how many ordinary air?
     air-detection-range: 3   # 3 = 7x7x7, 2 = 5x5x5

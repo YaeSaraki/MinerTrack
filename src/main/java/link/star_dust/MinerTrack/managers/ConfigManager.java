@@ -194,7 +194,7 @@ public class ConfigManager {
     }
 
     public int getMaxVeinDistance() {
-        return config.getInt("xray.cave-detection.max_vein_distance", 10);
+        return config.getInt("xray.cave-detection.max_vein_distance", 5);
     }
 
     public int traceBackLength() {
