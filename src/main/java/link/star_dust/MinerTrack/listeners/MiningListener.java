@@ -64,6 +64,7 @@ public class MiningListener implements Listener {
                 checkAndResetPaths();
                 cleanupExpiredPaths();
                 cleanupExpiredExplosions();
+                cleanupExpiredPlacedBlocks();
             }, interval, interval);
         } else {
             // Use reflection to call the Spigot scheduling logic
@@ -83,6 +84,7 @@ public class MiningListener implements Listener {
                         checkAndResetPaths();
                         cleanupExpiredPaths();
                         cleanupExpiredExplosions();
+                        cleanupExpiredPlacedBlocks();
                     },
                     (long) interval,
                     (long) interval
@@ -122,6 +124,15 @@ public class MiningListener implements Listener {
         }
     }
     
+    private boolean isPlayerPlacedBlock(Location blockLocation) {
+        for (Set<Location> playerPlacedBlocks : placedOres.values()) {
+            if (playerPlacedBlocks.contains(blockLocation)) {
+                return true; // 方块是由玩家放置的
+            }
+        }
+        return false; // 方块不是由玩家放置的
+    }
+    
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         Entity entity = event.getEntity();
@@ -150,6 +161,11 @@ public class MiningListener implements Listener {
 
             // 统计爆炸影响的方块数量和稀有矿物数量
             for (Block block : event.blockList()) {
+            	Location blockLocation = block.getLocation();
+            	if (isPlayerPlacedBlock(blockLocation)) {
+                    continue;
+                }
+            	
                 totalBlocks++;
                 if (rareOres.contains(block.getType().name())) {
                     rareOresCount++;
@@ -222,6 +238,11 @@ public class MiningListener implements Listener {
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
         Location blockLocation = event.getBlock().getLocation();
+        
+        if (isPlayerPlacedBlock(blockLocation)) {
+            return;
+        }
+        
         List<String> rareOres = plugin.getConfig().getStringList("xray.rare-ores");
 
         if (!player.hasPermission("minertrack.bypass") || player.hasPermission("minertrack.bypass") && plugin.getConfigManager().DisableBypass()) {
@@ -529,6 +550,18 @@ public class MiningListener implements Listener {
 
         // 如果搜索完成后仍未找到连接路径，则不联通
         return false;
+    }
+    
+    private void cleanupExpiredPlacedBlocks() {
+        long currentTime = System.currentTimeMillis();
+        long expirationTime = plugin.getConfig().getInt("xray.trace_remove", 15) * 60 * 1000L;
+
+        placedOres.forEach((playerId, blockSet) -> blockSet.removeIf(blockLocation -> {
+            long placedTime = blockLocation.getWorld().getTime();
+            return (currentTime - placedTime) > expirationTime;
+        }));
+
+        //plugin.getLogger().info("清理了过期的放置方块记录。当前记录总数: " + placedOres.size());
     }
     
     private void checkAndResetPaths() {
