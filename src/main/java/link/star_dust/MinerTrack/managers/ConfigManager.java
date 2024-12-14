@@ -71,6 +71,8 @@ public class ConfigManager {
             "xray.cave-detection.air-threshold",
             "xray.cave-detection.air-detection-range",
             "xray.cave-detection.cave_check_skip_vl",
+            "xray.cave-detection.CaveAirMultiplier",
+            "xray.cave-detection.max_vein_distance",
             "xray.decay.interval",
             "xray.decay.amount",
             "xray.decay.factor",
