@@ -185,7 +185,7 @@ public class ViolationManager {
 
         // 取消当前的 VL 衰减任务
         if (vlDecayTasks.containsKey(playerId)) {
-            ((BukkitRunnable) vlDecayTasks.get(playerId)).cancel();
+        	cancelVLDecayTask(playerId);
             vlDecayTasks.remove(playerId);
         }
 
@@ -261,7 +261,7 @@ public class ViolationManager {
                 // 如果 VL 归零，记录时间戳
                 if (newVL == 0) {
                     vlZeroTimestamp.put(playerId, now);
-                    plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
+                    //plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
                 }
             } else {
                 // VL 已经为 0，无需处理
