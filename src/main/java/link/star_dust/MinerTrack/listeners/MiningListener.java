@@ -47,9 +47,11 @@ public class MiningListener implements Listener {
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
     private final Map<Location, Long> explosionExposedOres = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
-
+    private final MiningDetectionExtension ex;
+    
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
+		this.ex = plugin.miningDetectionExtension;
         int interval = 20 * 60; // Scheduling interval (unit: tick)
 
         if (FoliaCheck.isFolia()) {
@@ -434,6 +436,8 @@ public class MiningListener implements Listener {
                 for (int z = -range; z <= range; z++) {
                     Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
                     if (type == Material.CAVE_AIR) {
+                        airCount =+ plugin.getConfigManager().CaveAirMultiplier();
+                    } else if (type == Material.AIR) {
                         airCount++;
                     }
                 }

@@ -14,6 +14,8 @@ package link.star_dust.MinerTrack.managers;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
+
 import link.star_dust.MinerTrack.MinerTrack;
 
 import java.io.File;
@@ -27,7 +29,7 @@ public class LanguageManager {
     private final MinerTrack plugin;
     private YamlConfiguration languageConfig;
     private final File languageFile;
-    private static LanguageManager instance = null;
+    private static LanguageManager instance;
 
     public LanguageManager(MinerTrack plugin) {
         this.plugin = plugin;

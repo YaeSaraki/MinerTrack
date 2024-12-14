@@ -39,6 +39,7 @@ import link.star_dust.MinerTrack.managers.ConfigManager;
 import link.star_dust.MinerTrack.managers.LanguageManager;
 import link.star_dust.MinerTrack.managers.UpdateManager;
 import link.star_dust.MinerTrack.managers.ViolationManager;
+import link.star_dust.MinerTrack.listeners.MiningDetectionExtension;
 import link.star_dust.MinerTrack.listeners.MiningListener;
 import link.star_dust.MinerTrack.commands.*;
 
@@ -50,6 +51,7 @@ public class MinerTrack extends JavaPlugin {
     private final Set<UUID> verbosePlayers = new HashSet<>();
     private boolean verboseConsole = false;
     private UpdateManager updateManager;
+    public MiningDetectionExtension miningDetectionExtension;
 
     @Override
     public void onEnable() {
@@ -59,6 +61,8 @@ public class MinerTrack extends JavaPlugin {
         violationManager = new ViolationManager(this);
         notifier = new Notifier(this);
         updateManager = new UpdateManager(this);
+        miningDetectionExtension = new MiningDetectionExtension(this);
+        miningDetectionExtension.register();
         
         int pluginId = 23790;
         new Metrics(this, pluginId);

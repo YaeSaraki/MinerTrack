@@ -157,7 +157,7 @@ public class ConfigManager {
     }
 
     public int getCaveBypassAirCount() {
-        return config.getInt("xray.cave-detection.air-threshold", 4);
+        return config.getInt("xray.cave-detection.air-threshold", 14);
     }
 
     public int getCaveCheckDetection() {
@@ -204,6 +204,14 @@ public class ConfigManager {
     public boolean caveSkipVL() {
         return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
     }
+
+	public int getSuspicionThreshold() {
+		return config.getInt("xray.mine.suspicionThreshold", 100);
+	}
+
+	public int CaveAirMultiplier() {
+		return config.getInt("xray.cave-detection.CaveAirMultiplier", 5);
+	}
 }
 
 
