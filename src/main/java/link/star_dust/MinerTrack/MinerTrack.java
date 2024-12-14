@@ -81,6 +81,8 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors(""));
         getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
+        
+        checkForUpdates(null);
     }
     
     @EventHandler
