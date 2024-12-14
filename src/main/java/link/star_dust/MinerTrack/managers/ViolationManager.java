@@ -40,6 +40,7 @@ public class ViolationManager {
     private final MinerTrack plugin;
     private final static Map<UUID, Integer> violationLevels = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
+    private final Map<UUID, Long> vlChangedTimestamp = new HashMap<>();
     private final Map<UUID, Object> vlDecayTasks = new HashMap<>();
 
     private String currentLogFileName;
@@ -178,10 +179,14 @@ public class ViolationManager {
     }
 
     public void increaseViolationLevel(Player player, int increment, String blockType, int count, int vein, Location location) {
+    	long now = System.currentTimeMillis();
         UUID playerId = player.getUniqueId();
 
         // 移除 VL=0 的时间戳
         vlZeroTimestamp.remove(playerId);
+        
+        // 添加改变 VL 的时间戳
+        vlChangedTimestamp.put(playerId, now);
 
         // 取消当前的 VL 衰减任务
         if (vlDecayTasks.containsKey(playerId)) {
@@ -240,34 +245,38 @@ public class ViolationManager {
     }
     
     public void processVLDecayTasks() {
-        long now = System.currentTimeMillis();
+    	long now = System.currentTimeMillis();
 
-        for (UUID playerId : new HashSet<>(violationLevels.keySet())) {
-            int currentVL = violationLevels.getOrDefault(playerId, 0);
+    	for (UUID playerId : new HashSet<>(violationLevels.keySet())) {
+    		int currentVL = violationLevels.getOrDefault(playerId, 0);
 
-            if (currentVL > 0) {
-                // 根据配置文件获取参数
-                int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
-                double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9);
-                boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
+    		if (currentVL > 0) {
+    			long decayIntervalMillis = plugin.getConfig().getInt("xray.decay.interval", 3) * 60 * 1000L;
+    			Long lastChangedTime = vlChangedTimestamp.get(playerId);
+    			if (lastChangedTime != null && now - lastChangedTime > decayIntervalMillis) {
+    				int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
+    				double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9);
+    				boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
 
-                // 选择线性或非线性衰减
-                int newVL = useFactor
-                    ? (int) Math.ceil(currentVL * decayFactor)
-                    : Math.max(0, currentVL - decayAmount);
+    				// 选择线性或非线性衰减
+    				int newVL = useFactor
+    						? (int) Math.ceil(currentVL * decayFactor)
+    								: Math.max(0, currentVL - decayAmount);
 
-                violationLevels.put(playerId, newVL);
+    				violationLevels.put(playerId, newVL);
+    				vlChangedTimestamp.put(playerId, now);
 
-                // 如果 VL 归零，记录时间戳
-                if (newVL == 0) {
-                    vlZeroTimestamp.put(playerId, now);
-                    //plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
-                }
-            } else {
-                // VL 已经为 0，无需处理
-                vlZeroTimestamp.putIfAbsent(playerId, now);
-            }
-        }
+    				// 如果 VL 归零，记录时间戳
+    				if (newVL == 0) {
+    					vlZeroTimestamp.put(playerId, now);
+    					//plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
+    				}
+    			}
+    		} else {
+    			// VL 已经为 0，无需处理
+    			vlZeroTimestamp.putIfAbsent(playerId, now);
+    		}
+    	}
     }
     
     private void scheduleVLDecayTask(Player player) {
@@ -287,9 +296,10 @@ public class ViolationManager {
     }
     
     private void cancelVLDecayTask(UUID playerId) {
-        if (vlDecayTasks.remove(playerId) != null) {
+        /*if (vlDecayTasks.remove(playerId) != null) {
             plugin.getLogger().info("VL decay task canceled for player: " + playerId);
-        }
+        }*/
+        vlDecayTasks.remove(playerId);
     }
     
     /* BUGGED
