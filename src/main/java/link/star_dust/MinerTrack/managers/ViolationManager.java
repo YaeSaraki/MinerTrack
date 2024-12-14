@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -46,12 +47,47 @@ public class ViolationManager {
     public ViolationManager(MinerTrack plugin) {
         this.plugin = plugin;
         this.currentLogFileName = generateLogFileName();
+        int interval = 20 * 60; // Scheduling interval (unit: tick)
 
-        startViolationDecayTask();
-    }
+        if (FoliaCheck.isFolia()) {
+            // Folia scheduling logic
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
+                if (!plugin.isEnabled()) {
+                    task.cancel();
+                    return;
+                }
+                processVLDecayTasks();
+            }, interval, interval);
+        } else {
+            // Use reflection to call the Spigot scheduling logic
+            try {
+                Class<?> schedulerClass = Bukkit.getScheduler().getClass();
+                java.lang.reflect.Method runTaskTimer = schedulerClass.getMethod(
+                    "runTaskTimer",
+                    Plugin.class,
+                    Runnable.class,
+                    long.class,
+                    long.class
+                );
 
-    private void startViolationDecayTask() {
-    	Bukkit.getOnlinePlayers().forEach(this::scheduleVLDecayTask);
+                Object[] params = {
+                    plugin,
+                    (Runnable) () -> {
+                    	processVLDecayTasks();
+                    },
+                    (long) interval,
+                    (long) interval
+                };
+
+                runTaskTimer.invoke(
+                    Bukkit.getScheduler(),
+                    params
+                );
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to schedule task on Spigot: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
     
     private String generateLogFileName() {
@@ -203,58 +239,57 @@ public class ViolationManager {
         }
     }
     
+    public void processVLDecayTasks() {
+        long now = System.currentTimeMillis();
+
+        for (UUID playerId : new HashSet<>(violationLevels.keySet())) {
+            int currentVL = violationLevels.getOrDefault(playerId, 0);
+
+            if (currentVL > 0) {
+                // 根据配置文件获取参数
+                int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
+                double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9);
+                boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
+
+                // 选择线性或非线性衰减
+                int newVL = useFactor
+                    ? (int) Math.ceil(currentVL * decayFactor)
+                    : Math.max(0, currentVL - decayAmount);
+
+                violationLevels.put(playerId, newVL);
+
+                // 如果 VL 归零，记录时间戳
+                if (newVL == 0) {
+                    vlZeroTimestamp.put(playerId, now);
+                    plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
+                }
+            } else {
+                // VL 已经为 0，无需处理
+                vlZeroTimestamp.putIfAbsent(playerId, now);
+            }
+        }
+    }
+    
     private void scheduleVLDecayTask(Player player) {
         UUID playerId = player.getUniqueId();
 
-        // 如果任务已经存在，则跳过
+        // 如果任务已存在，则跳过
         if (vlDecayTasks.containsKey(playerId)) {
             return;
         }
 
-        // 从配置文件中加载参数
-        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 3); // 默认3分钟
-        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
-        double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9); // 非线性衰减比例
-        boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
+        // 初始化 VL 和时间戳
+        violationLevels.putIfAbsent(playerId, 0);
+        vlZeroTimestamp.putIfAbsent(playerId, System.currentTimeMillis());
 
-        BukkitRunnable decayTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                int currentVL = violationLevels.getOrDefault(playerId, 0);
-
-                if (currentVL > 0) {
-                    // 根据配置选择线性或非线性衰减
-                    int newVL = useFactor
-                        ? (int) Math.ceil(currentVL * decayFactor) // 非线性衰减
-                        : Math.max(0, currentVL - decayAmount);   // 线性衰减
-
-                    violationLevels.put(playerId, newVL);
-
-                    // 如果 VL 归零，记录时间戳并移除任务
-                    if (newVL == 0) {
-                        vlZeroTimestamp.put(playerId, System.currentTimeMillis());
-                        //plugin.getLogger().info("VL=0 timestamp recorded for player: " + playerId);
-
-                        cancel();
-                        vlDecayTasks.remove(playerId);
-                    }
-                } else {
-                    // VL 已经为 0，任务无需继续
-                    cancel();
-                    vlDecayTasks.remove(playerId);
-                }
-            }
-        };
-
-        // 延迟启动任务，并设置间隔
-        decayTask.runTaskTimer(plugin, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
-        vlDecayTasks.put(playerId, decayTask);
-
-        // 记录任务启动日志
-        /*plugin.getLogger().info(String.format(
-            "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
-            player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
-        ));*/
+        // 添加到任务集合中
+        vlDecayTasks.put(playerId, playerId);
+    }
+    
+    private void cancelVLDecayTask(UUID playerId) {
+        if (vlDecayTasks.remove(playerId) != null) {
+            plugin.getLogger().info("VL decay task canceled for player: " + playerId);
+        }
     }
     
     /* BUGGED
