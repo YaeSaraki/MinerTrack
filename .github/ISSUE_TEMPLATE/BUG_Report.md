@@ -3,7 +3,7 @@ name: BUG Report
 about: If you want to report a bug, select this.
 ---
 
-### [Issue Title]
+### [Minecraft Version] [Issue Title]
 
 - [x] Tested on Spigot
 - [x] Tested with this plugin only
