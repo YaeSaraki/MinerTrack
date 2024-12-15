@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'link.star_dust'
-version '1.6.1-beta'
+version '1.6.2-beta'
 
 sourceCompatibility = 17
 
@@ -23,13 +23,17 @@ repositories {
         name = 'bStats'
         url = 'https://repo.codemc.org/repository/maven-public/'
     }
+    maven {
+        name = 'Apache'
+        url = 'https://maven.aliyun.com/repository/apache-snapshots'
+    }
 }
 
 dependencies {
-    // compileOnly 'org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT'
     compileOnly 'dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT'
     implementation 'org.bstats:bstats-bukkit:3.0.0'
-	implementation 'org.json:json:20230227'
+    implementation 'org.json:json:20230227'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2'
 }
 
 tasks.withType(JavaCompile) {
@@ -54,6 +58,7 @@ jar {
 
 shadowJar {
     relocate 'org.bstats', 'link.star_dust.bstats'
+    relocate 'org.apache.httpcomponents', 'link.star_dust.httpcomponents'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set('')
 }

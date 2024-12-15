@@ -9,6 +9,7 @@
 #  SpigotMC: https://www.spigotmc.org/resources/120562/
 #  Hangar: https://hangar.papermc.io/Author87668/MinerTrack
 #  Modrinth: https://modrinth.com/plugin/minertrack
+#  CurseForge: https://legacy.curseforge.com/minecraft/bukkit-plugins/minertrack
 #
 ##################################################################################
 
@@ -27,6 +28,22 @@ delete_time: 30
 
 # Deny Bypass Permission - force checks on all players, including Operators.
 disable_bypass_permission: false
+
+# Discord WebHook
+DiscordWebHook:
+  enable: false
+  WebHookURL: ''
+  vl-required: 4
+  vl-add-message:
+    color: '0xFF5733'
+    title: "%player%'s VL increased"
+    text:
+      - 'Player Name: %player%'
+      - 'Player UUID: %player_uuid%'
+      - 'Player Violation Level: %player_vl%'
+      - ''
+      - 'Mining Ore: %ore_type%'
+      - 'Mined Veins: %mined_veins%'
 
 #############################################################################################################################
 ##        ##   This plugin in order to capture XRayer quickly, might generate false positives for players who are lucky!   ##

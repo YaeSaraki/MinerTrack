@@ -15,6 +15,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.Nullable;
+
 import link.star_dust.MinerTrack.MinerTrack;
 
 import java.io.*;
@@ -82,7 +84,15 @@ public class ConfigManager {
             "explosion.explosion_retention_time",
             "explosion.base_vl_rate",
             "explosion.suspicious_hit_rate",
-            "explosion"
+            "explosion",
+            "DiscordWebHook",
+            "DiscordWebHook.enable",
+            "DiscordWebHook.WebHookURL",
+            "DiscordWebHook.vl-required",
+            "DiscordWebHook.vl-add-message",
+            "DiscordWebHook.vl-add-message.color",
+            "DiscordWebHook.vl-add-message.title",
+            "DiscordWebHook.vl-add-message.text"
         );
 
         for (String key : defaultConfig.getKeys(false)) {
@@ -214,6 +224,30 @@ public class ConfigManager {
 	public int CaveAirMultiplier() {
 		return config.getInt("xray.cave-detection.CaveAirMultiplier", 5);
 	}
+	
+	public String WebHookURL() {
+        return config.getString("DiscordWebHook.WebHookURL");
+    }
+	
+	public boolean WebHookEnable() {
+        return config.getBoolean("DiscordWebHook.enable", false);
+    }
+	
+	public int WebHookColor() {
+        return config.getInt("DiscordWebHook.vl-add-message.color", 0xFF5733);
+    }
+	
+	public String WebHookTitle() {
+        return config.getString("DiscordWebHook.vl-add-message.title");
+    }
+	
+	public List<String> WebHookText() {
+        return config.getStringList("DiscordWebHook.vl-add-message.text");
+    }
+	
+	public int WebHookVLRequired() {
+        return config.getInt("DiscordWebHook.vl-required");
+    }
 }
 
 

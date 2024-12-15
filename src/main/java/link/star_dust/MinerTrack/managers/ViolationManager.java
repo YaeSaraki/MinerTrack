@@ -13,6 +13,8 @@ package link.star_dust.MinerTrack.managers;
 
 import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
+import link.star_dust.MinerTrack.hooks.DiscordWebHook;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -26,8 +28,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -242,6 +246,10 @@ public class ViolationManager {
             }
 
             logViolation(player, newLevel, increment, blockType, count, vein, location);
+            
+            if (plugin.getConfigManager().WebHookEnable() && newLevel >= plugin.getConfigManager().WebHookVLRequired()) {
+                WebHook(playerId, blockType, vein);
+            }
         }
     }
     
@@ -303,87 +311,45 @@ public class ViolationManager {
         vlDecayTasks.remove(playerId);
     }
     
-    /* BUGGED
-    private void scheduleVLDecayTask(Player player) {
-        UUID playerId = player.getUniqueId();
-
-        // 如果任务已经存在，则跳过
-        if (vlDecayTasks.containsKey(playerId)) {
-            return;
-        }
-
-        // 从配置文件中加载参数
-        int decayInterval = plugin.getConfig().getInt("xray.decay.interval", 3); // 默认3分钟
-        int decayAmount = plugin.getConfig().getInt("xray.decay.amount", 1);
-        double decayFactor = plugin.getConfig().getDouble("xray.decay.factor", 0.9); // 非线性衰减比例
-        boolean useFactor = plugin.getConfig().getBoolean("xray.decay.use_factor", false);
-
-        Runnable decayRunnable = () -> {
-            int currentVL = violationLevels.getOrDefault(playerId, 0);
-
-            if (currentVL > 0) {
-                // 根据配置选择线性或非线性衰减
-                int newVL = useFactor
-                        ? (int) Math.ceil(currentVL * decayFactor) // 非线性衰减
-                        : Math.max(0, currentVL - decayAmount);   // 线性衰减
-
-                violationLevels.put(playerId, newVL);
-
-                // 如果 VL 归零，记录时间戳并移除任务
-                if (newVL == 0) {
-                    vlZeroTimestamp.put(playerId, System.currentTimeMillis());
-                    plugin.getLogger().info("VL=0 timestamp recorded for player: " + player.getName());
-                    cancelVLDecayTask(playerId);
-                }
-            } else {
-                // VL 已经为 0，任务无需继续
-                cancelVLDecayTask(playerId);
+    private void WebHook(UUID playerId, String oreType, int minedVeins) {
+        if (plugin.getConfigManager().WebHookEnable()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null) {
+                return; // 如果玩家离线则跳过
             }
-        };
 
-        if (FoliaCheck.isFolia()) {
-            // 使用 Folia 全局调度器
-            ScheduledTask task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, taskScheduler -> {
-                if (!plugin.isEnabled()) {
-                    taskScheduler.cancel();
-                    return;
-                }
-                decayRunnable.run();
-            }, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
+            // 获取 WebHook 配置项
+            String webHookURL = plugin.getConfigManager().WebHookURL();
+            String title = plugin.getConfigManager().WebHookTitle();
+            List<String> textTemplate = plugin.getConfigManager().WebHookText();
+            int color = plugin.getConfigManager().WebHookColor();
 
-            vlDecayTasks.put(playerId, task);
-        } else {
-            // 使用 Spigot 的调度器
-            @SuppressWarnings("deprecation")
-			BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, decayRunnable, decayInterval * 60L * 20L, decayInterval * 60L * 20L);
-            vlDecayTasks.put(playerId, task);
+            // 替换占位符
+            List<String> formattedText = new ArrayList<>();
+            for (String line : textTemplate) {
+                formattedText.add(
+                    line.replace("%player%", player.getName())
+                        .replace("%player_uuid%", player.getUniqueId().toString())
+                        .replace("%player_vl%", String.valueOf(getViolationLevel(player))
+                        .replace("%ore_type%", oreType))
+                        .replace("%mined_veins%", String.valueOf(minedVeins))
+                );
+            }
+
+            // 转换为多行字符串
+            String description = String.join("\n", formattedText);
+
+            // 创建并发送嵌入消息
+            DiscordWebHook discordWebHook = new DiscordWebHook(plugin, webHookURL);
+            DiscordWebHook.Embed embed = new DiscordWebHook.Embed(
+                title,
+                description,
+                color
+            );
+            discordWebHook.sendEmbed(embed);
         }
-
-        // 记录任务启动日志
-        plugin.getLogger().info(String.format(
-                "VL Decay Task Started | Player: %s | Interval: %d minutes | Decay Amount: %d | Use Factor: %s",
-                player.getName(), decayInterval, decayAmount, useFactor ? "Yes" : "No"
-        ));
     }
 
-    private void cancelVLDecayTask(UUID playerId) {
-        // 获取任务对象
-        Object task = vlDecayTasks.remove(playerId);
-
-        if (task != null) {
-            if (task instanceof ScheduledTask) {
-                // Folia 调度任务
-                ((ScheduledTask) task).cancel();
-            } else if (task instanceof BukkitTask) {
-                // Spigot 调度任务
-                ((BukkitTask) task).cancel();
-            } else {
-                // 未知类型任务
-                plugin.getLogger().warning("Unknown task type for player: " + playerId);
-            }
-        }
-    }
-    */
 
     public void resetViolationLevel(Player player) {
         violationLevels.remove(player.getUniqueId());
