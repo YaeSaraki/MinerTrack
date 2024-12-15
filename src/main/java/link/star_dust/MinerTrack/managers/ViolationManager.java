@@ -128,7 +128,7 @@ public class ViolationManager {
         }
     }
 
-    private void logViolation(Player player, int vl, int addVl, String blockType, int count, Location location) {
+    private void logViolation(Player player, int vl, int addVl, String blockType, int count, int vein, Location location) {
         if (!plugin.getConfig().getBoolean("log_file")) return;
 
         String logFormat = plugin.getLanguageManager().getLogFormat();
@@ -154,6 +154,7 @@ public class ViolationManager {
             .replace("%add_vl%", String.valueOf(addVl))
             .replace("%block_type%", blockType)
             .replace("%count%", String.valueOf(count))
+            .replace("%vein_count%", String.valueOf(vein))
             .replace("%world%", worldName)
             .replace("%pos_x%", String.valueOf(location.getBlockX()))
             .replace("%pos_y%", String.valueOf(location.getBlockY()))
@@ -240,7 +241,7 @@ public class ViolationManager {
                 Bukkit.getConsoleSender().sendMessage(formattedMessage);
             }
 
-            logViolation(player, newLevel, increment, blockType, count, location);
+            logViolation(player, newLevel, increment, blockType, count, vein, location);
         }
     }
     
