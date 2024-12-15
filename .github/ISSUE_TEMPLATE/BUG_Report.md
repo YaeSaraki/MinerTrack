@@ -5,7 +5,7 @@ about: If you want to report a bug, select this.
 
 ### [Minecraft Version] [Issue Title]
 
-- [x] Tested on Spigot
+- [x] Tested on Paper
 - [x] Tested with this plugin only
 #### Description
 
