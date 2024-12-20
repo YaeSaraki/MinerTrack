@@ -35,15 +35,17 @@ DiscordWebHook:
   WebHookURL: ''
   vl-required: 4
   vl-add-message:
-    color: '0xFF5733'
-    title: "%player%'s VL increased"
+    color: 0xFF5733
+    title: "X-Ray Alert"
     text:
       - 'Player Name: %player%'
       - 'Player UUID: %player_uuid%'
       - 'Player Violation Level: %player_vl%'
       - ''
-      - 'Mining Ore: %ore_type%'
+      - 'Mining Ore: %ore_type%x%ore_count%'
       - 'Mined Veins: %mined_veins%'
+      - ''
+      - 'Pos: %pos_x% %pos_y% %pos_z%'
 
 #############################################################################################################################
 ##        ##   This plugin in order to capture XRayer quickly, might generate false positives for players who are lucky!   ##
@@ -59,7 +61,7 @@ xray:
   worlds:
     world:
       enable: true
-      max-height: 64
+      max-height: 32
     world_nether:
       enable: true
       max-height: 128
@@ -98,6 +100,11 @@ xray:
     CaveAirMultiplier: 5     # If cave air is found, regarded as how many ordinary air?
     air-detection-range: 3   # 3 = 7x7x7, 2 = 5x5x5
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
+    
+  # Player need to meet the following conditions in order to increase VL
+  ViolationThreshold:
+    veinCountThreshold: 2
+    turnCountThreshold: 10
 
   # Violation level decay settings (Unit: minute)
   decay:

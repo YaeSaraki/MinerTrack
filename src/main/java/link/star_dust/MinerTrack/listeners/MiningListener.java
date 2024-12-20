@@ -306,7 +306,11 @@ public class MiningListener implements Listener {
         		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
         		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
         		lastVeinLocation.get(playerId).put(worldName, blockLocation);
-        		analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
+        		
+        		int veinCount = minedVeinCount.getOrDefault(playerId, 0);
+        		if (veinCount >= plugin.getConfigManager().getVeinCountThreshold()) {
+        		    analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
+        		}
         	}
         }
     }

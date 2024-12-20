@@ -213,7 +213,9 @@ public class ViolationManager {
             if (threshold > oldLevel && threshold <= newLevel) {
                 String command = plugin.getConfig().getString("xray.commands." + key)
                     .replace("%player%", player.getName());
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                });
             }
         }
 
@@ -248,7 +250,7 @@ public class ViolationManager {
             logViolation(player, newLevel, increment, blockType, count, vein, location);
             
             if (plugin.getConfigManager().WebHookEnable() && newLevel >= plugin.getConfigManager().WebHookVLRequired()) {
-                WebHook(playerId, blockType, vein);
+                WebHook(playerId, blockType, vein, count, location);
             }
         }
     }
@@ -311,7 +313,7 @@ public class ViolationManager {
         vlDecayTasks.remove(playerId);
     }
     
-    private void WebHook(UUID playerId, String oreType, int minedVeins) {
+    private void WebHook(UUID playerId, String oreType, int minedVeins, int ore_count, Location location) {
         if (plugin.getConfigManager().WebHookEnable()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player == null) {
@@ -330,9 +332,13 @@ public class ViolationManager {
                 formattedText.add(
                     line.replace("%player%", player.getName())
                         .replace("%player_uuid%", player.getUniqueId().toString())
-                        .replace("%player_vl%", String.valueOf(getViolationLevel(player))
-                        .replace("%ore_type%", oreType))
+                        .replace("%player_vl%", String.valueOf(getViolationLevel(player)))
+                        .replace("%ore_type%", oreType)
                         .replace("%mined_veins%", String.valueOf(minedVeins))
+                        .replace("%ore_count%", String.valueOf(ore_count))
+                        .replace("%pos_x%", String.valueOf(location.getBlockX()))
+                        .replace("%pos_y%", String.valueOf(location.getBlockY()))
+                        .replace("%pos_z%", String.valueOf(location.getBlockZ()))
                 );
             }
 

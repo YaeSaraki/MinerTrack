@@ -161,7 +161,7 @@ public class ConfigManager {
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 2);
     }
 
     public int getTurnCountThreshold() {
