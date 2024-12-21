@@ -82,13 +82,21 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
         
-        checkForUpdates(null);
+        if (getConfigManager().updateCheck()) {
+            checkForUpdates(null);
+      	} else {
+      		return;
+      	}
     }
     
     @EventHandler
     public void onServerLoad(ServerLoadEvent event) {
-        getLogger().info("Server has finished loading. Checking for updates...");
-        checkForUpdates(null);
+    	if (getConfigManager().updateCheck()) {
+          getLogger().info("Server has finished loading. Checking for updates...");
+          checkForUpdates(null);
+    	} else {
+    		return;
+    	}
     }
     
     public String applyColors(String message) {

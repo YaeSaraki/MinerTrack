@@ -9,7 +9,7 @@
 #  SpigotMC: https://www.spigotmc.org/resources/120562/
 #  Hangar: https://hangar.papermc.io/Author87668/MinerTrack
 #  Modrinth: https://modrinth.com/plugin/minertrack
-#  CurseForge: https://legacy.curseforge.com/minecraft/bukkit-plugins/minertrack
+#  CurseForge: https://www.curseforge.com/minecraft/bukkit-plugins/minertrack
 #
 ##################################################################################
 
@@ -103,7 +103,7 @@ xray:
     
   # Player need to meet the following conditions in order to increase VL
   ViolationThreshold:
-    veinCountThreshold: 2
+    veinCountThreshold: 3
     turnCountThreshold: 10
 
   # Violation level decay settings (Unit: minute)

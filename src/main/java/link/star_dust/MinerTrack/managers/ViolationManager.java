@@ -18,7 +18,6 @@ import link.star_dust.MinerTrack.hooks.DiscordWebHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -38,6 +37,7 @@ import java.util.UUID;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 public class ViolationManager {
@@ -69,7 +69,6 @@ public class ViolationManager {
                 Class<?> schedulerClass = Bukkit.getScheduler().getClass();
                 java.lang.reflect.Method runTaskTimer = schedulerClass.getMethod(
                     "runTaskTimer",
-                    Plugin.class,
                     Runnable.class,
                     long.class,
                     long.class
@@ -174,6 +173,20 @@ public class ViolationManager {
             e.printStackTrace();
         }
     }
+    
+    private void logCommand(String command) {
+        if (!plugin.getConfig().getBoolean("log_file")) return;
+
+        String fileName = getLogFileName();
+        File logDir = new File(plugin.getDataFolder(), "logs");
+        File logFile = new File(logDir, fileName);
+
+        try (FileWriter writer = new FileWriter(logFile, true)) {
+            writer.write(command + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static int getViolationLevel(UUID uuid) {
         return violationLevels.getOrDefault(uuid, 0);
@@ -187,22 +200,17 @@ public class ViolationManager {
     	long now = System.currentTimeMillis();
         UUID playerId = player.getUniqueId();
 
-        // 移除 VL=0 的时间戳
         vlZeroTimestamp.remove(playerId);
         
-        // 添加改变 VL 的时间戳
         vlChangedTimestamp.put(playerId, now);
 
-        // 取消当前的 VL 衰减任务
         if (vlDecayTasks.containsKey(playerId)) {
         	cancelVLDecayTask(playerId);
             vlDecayTasks.remove(playerId);
         }
 
-        // 为新的 VL 重新安排衰减任务
         scheduleVLDecayTask(player);
 
-        // 处理 VL 增加后的其他逻辑
         int oldLevel = getViolationLevel(playerId);
         int newLevel = oldLevel + increment;
         violationLevels.put(playerId, newLevel);
@@ -211,14 +219,21 @@ public class ViolationManager {
         for (String key : plugin.getConfig().getConfigurationSection("xray.commands").getKeys(false)) {
             int threshold = Integer.parseInt(key);
             if (threshold > oldLevel && threshold <= newLevel) {
-                String command = plugin.getConfig().getString("xray.commands." + key)
-                    .replace("%player%", player.getName());
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-                });
+            	String command = plugin.getConfig().getString("xray.commands." + key)
+            			.replace("%player%", player.getName());
+            	
+            	if (FoliaCheck.isFolia()) {
+            		RegionScheduler regionScheduler = Bukkit.getRegionScheduler();
+            		regionScheduler.run(plugin, location, scheduledTask -> {
+            		    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            		    logCommand(command);
+            		});
+            	} else {
+            		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            		logCommand(command);
+            	}
             }
         }
-
 
         if (newLevel >= 1) {
             String verboseFormat = plugin.getLanguageManager().getPrefixedMessage("verbose-format");
@@ -314,46 +329,44 @@ public class ViolationManager {
     }
     
     private void WebHook(UUID playerId, String oreType, int minedVeins, int ore_count, Location location) {
-        if (plugin.getConfigManager().WebHookEnable()) {
-            Player player = Bukkit.getPlayer(playerId);
-            if (player == null) {
-                return; // 如果玩家离线则跳过
-            }
+    	Player player = Bukkit.getPlayer(playerId);
+    	if (player == null) {
+    		return; // 如果玩家离线则跳过
+    	}
 
-            // 获取 WebHook 配置项
-            String webHookURL = plugin.getConfigManager().WebHookURL();
-            String title = plugin.getConfigManager().WebHookTitle();
-            List<String> textTemplate = plugin.getConfigManager().WebHookText();
-            int color = plugin.getConfigManager().WebHookColor();
+    	// 获取 WebHook 配置项
+    	String webHookURL = plugin.getConfigManager().WebHookURL();
+    	String title = plugin.getConfigManager().WebHookTitle();
+    	List<String> textTemplate = plugin.getConfigManager().WebHookText();
+    	int color = plugin.getConfigManager().WebHookColor();
 
-            // 替换占位符
-            List<String> formattedText = new ArrayList<>();
-            for (String line : textTemplate) {
-                formattedText.add(
-                    line.replace("%player%", player.getName())
-                        .replace("%player_uuid%", player.getUniqueId().toString())
-                        .replace("%player_vl%", String.valueOf(getViolationLevel(player)))
-                        .replace("%ore_type%", oreType)
-                        .replace("%mined_veins%", String.valueOf(minedVeins))
-                        .replace("%ore_count%", String.valueOf(ore_count))
-                        .replace("%pos_x%", String.valueOf(location.getBlockX()))
-                        .replace("%pos_y%", String.valueOf(location.getBlockY()))
-                        .replace("%pos_z%", String.valueOf(location.getBlockZ()))
-                );
-            }
+    	// 替换占位符
+    	List<String> formattedText = new ArrayList<>();
+    	for (String line : textTemplate) {
+    		formattedText.add(
+    				line.replace("%player%", player.getName())
+    				.replace("%player_uuid%", player.getUniqueId().toString())
+    				.replace("%player_vl%", String.valueOf(getViolationLevel(player)))
+    				.replace("%ore_type%", oreType)
+    				.replace("%mined_veins%", String.valueOf(minedVeins))
+    				.replace("%ore_count%", String.valueOf(ore_count))
+    				.replace("%pos_x%", String.valueOf(location.getBlockX()))
+    				.replace("%pos_y%", String.valueOf(location.getBlockY()))
+    				.replace("%pos_z%", String.valueOf(location.getBlockZ()))
+    				);
+    	}
 
-            // 转换为多行字符串
-            String description = String.join("\n", formattedText);
+    	// 转换为多行字符串
+    	String description = String.join("\n", formattedText);
 
-            // 创建并发送嵌入消息
-            DiscordWebHook discordWebHook = new DiscordWebHook(plugin, webHookURL);
-            DiscordWebHook.Embed embed = new DiscordWebHook.Embed(
-                title,
-                description,
-                color
-            );
-            discordWebHook.sendEmbed(embed);
-        }
+    	// 创建并发送嵌入消息
+    	DiscordWebHook discordWebHook = new DiscordWebHook(plugin, webHookURL);
+    	DiscordWebHook.Embed embed = new DiscordWebHook.Embed(
+    			title,
+    			description,
+    			color
+    			);
+    	discordWebHook.sendEmbed(embed);
     }
 
 

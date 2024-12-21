@@ -92,7 +92,10 @@ public class ConfigManager {
             "DiscordWebHook.vl-add-message",
             "DiscordWebHook.vl-add-message.color",
             "DiscordWebHook.vl-add-message.title",
-            "DiscordWebHook.vl-add-message.text"
+            "DiscordWebHook.vl-add-message.text",
+            "xray.ViolationThreshold.turnCountThreshold",
+            "xray.ViolationThreshold.veinCountThreshold",
+            "xray.ViolationThreshold"
         );
 
         for (String key : defaultConfig.getKeys(false)) {
@@ -156,12 +159,8 @@ public class ConfigManager {
         return config.getStringList("xray.rare-ores");
     }
 
-    public int getViolationThreshold() {
-        return config.getInt("xray.violation-threshold", 10);
-    }
-
     public int getVeinCountThreshold() {
-        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 2);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
     }
 
     public int getTurnCountThreshold() {
@@ -179,8 +178,8 @@ public class ConfigManager {
     public int getWorldMaxHeight(String worldName) {
         ConfigurationSection xraySection = config.getConfigurationSection("xray.worlds");
         if (xraySection == null || !xraySection.isConfigurationSection(worldName)) {
-            plugin.getLogger().warning("Max height configuration for world " + worldName + " not found. Defaulting to no height limit.");
-            return -1;
+            //plugin.getLogger().warning("Max height configuration for world " + worldName + " not found. Defaulting to no height limit.");
+            return config.getInt("xray.worlds.all_unnamed_world.max-height", -1);
         }
         return xraySection.getInt(worldName + ".max-height", -1);
     }
@@ -211,6 +210,10 @@ public class ConfigManager {
 
     public int traceBackLength() {
         return config.getInt("xray.trace_back_length", 10);
+    }
+    
+    public boolean updateCheck() {
+        return config.getBoolean("check_update", true);
     }
 
     public boolean caveSkipVL() {
