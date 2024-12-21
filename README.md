@@ -2,9 +2,11 @@
 
 ## MinerTrack Anti-XRay
 
-[![Modrinth Downloads](https://img.shields.io/modrinth/dt/minertrack?style=flat&label=Modrinth%20Downloads&color=%234bd965)](https://modrinth.com/plugin/minertrack) [![Github all releases](https://img.shields.io/github/downloads/At87668/MinerTrack/total.svg?style=flat&label=Github%20Downloads)](https://gitHub.com/At87668/MinerTrack/releases/) [![GitHub release](https://img.shields.io/github/release/At87668/MinerTrack.svg?style=flat&label=Latest%20Version)](https://gitHub.com/At87668/MinerTrack/releases/)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/minertrack?style=flat&label=Modrinth%20Downloads&color=%234bd965)](https://modrinth.com/plugin/minertrack) [![Hangar Downloads](https://img.shields.io/hangar/dt/MinerTrack?label=Hangar%20Downloads&color=blue)](https://hangar.papermc.io/Author87668/MinerTrack) [![Github Downloads](https://img.shields.io/github/downloads/At87668/MinerTrack/total.svg?style=flat&label=Github%20Downloads)](https://gitHub.com/At87668/MinerTrack/releases/) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1159157?label=CurseForge%20Downloads&color=orange)](https://www.curseforge.com/minecraft/bukkit-plugins/minertrack)
 
-[![GitHub issues](https://img.shields.io/github/issues/At87668/MinerTrack.svg?style=flat&label=Github%20Issue)](https://gitHub.com/At87668/MinerTrack/issues/) [![GitHub latest commit](https://badgen.net/github/last-commit/At87668/MinerTrack?style=flat&label=Last%20Commit)](https://gitHub.com/At87668/MinerTrack/commit/) [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat&label=Open%20Source%20License)](https://github.com/At87668/MinerTrack/blob/main/LICENSE)
+![CurseForge Game Versions](https://img.shields.io/curseforge/game-versions/1159157?label=Support%20Version)
+
+[![Latest Version](https://img.shields.io/github/release/At87668/MinerTrack.svg?style=flat&label=Latest%20Version)](https://gitHub.com/At87668/MinerTrack/releases/) [![GitHub issues](https://img.shields.io/github/issues/At87668/MinerTrack.svg?style=flat&label=Github%20Issue)](https://gitHub.com/At87668/MinerTrack/issues/) [![GitHub latest commit](https://badgen.net/github/last-commit/At87668/MinerTrack?style=flat&label=Last%20Commit)](https://gitHub.com/At87668/MinerTrack/commit/) [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat&label=Open%20Source%20License)](https://github.com/At87668/MinerTrack/blob/main/LICENSE)
 
 [![Support Server](https://img.shields.io/discord/1302190990639235122.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/MzTea2W9cb)
 
