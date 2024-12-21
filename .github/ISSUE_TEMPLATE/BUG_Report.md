@@ -1,6 +1,10 @@
 ---
 name: BUG Report
 about: If you want to report a bug, select this.
+title: "[Minecraft Version] [Issue Title]"
+labels: "❌BUG"
+assignees: ''
+
 ---
 
 ### [Minecraft Version] [Issue Title]
@@ -31,4 +35,3 @@ about: If you want to report a bug, select this.
 1. Step 1
 1. Step 2
 1. Step ...
-

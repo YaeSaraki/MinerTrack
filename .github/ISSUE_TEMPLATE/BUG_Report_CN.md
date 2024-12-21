@@ -1,6 +1,10 @@
 ---
 name: BUG报告
 about: 如果你想报告一个BUG, 选择这个
+title: "### [Minecraft版本] [问题标题]"
+labels: "❌BUG"
+assignees: ''
+
 ---
 
 ### [Minecraft版本] [问题标题]
@@ -31,4 +35,3 @@ about: 如果你想报告一个BUG, 选择这个
 1. 步骤 1
 1. 步骤 2
 1. 步骤 ...
-
