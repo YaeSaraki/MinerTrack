@@ -230,7 +230,7 @@ public class ViolationManager {
             		});
             	} else {
             		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            		logCommand(command);
+            		logCommand("Excuted Command: " + command);
             	}
             }
         }
