@@ -2,7 +2,7 @@
 
 ## MinerTrack Anti-XRay
 
-[![Modrinth Downloads](https://img.shields.io/modrinth/dt/minertrack?style=flat&label=Modrinth%20Downloads&color=%234bd965)](https://modrinth.com/plugin/minertrack) [![Hangar Downloads](https://img.shields.io/hangar/dt/MinerTrack?label=Hangar%20Downloads&color=blue)](https://hangar.papermc.io/Author87668/MinerTrack) [![Github Downloads](https://img.shields.io/github/downloads/At87668/MinerTrack/total.svg?style=flat&label=Github%20Downloads)](https://gitHub.com/At87668/MinerTrack/releases/) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1159157?label=CurseForge%20Downloads&color=orange)](https://www.curseforge.com/minecraft/bukkit-plugins/minertrack)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/minertrack?style=flat&label=Modrinth%20Downloads&color=%234bd965)](https://modrinth.com/plugin/minertrack) [![SpigotMC Downloads](https://img.shields.io/spiget/downloads/120562?label=SpigotMC%20Downloads&color=yellow)](https://www.spigotmc.org/resources/120562/) [![Hangar Downloads](https://img.shields.io/hangar/dt/MinerTrack?label=Hangar%20Downloads&color=blue)](https://hangar.papermc.io/Author87668/MinerTrack) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1159157?label=CurseForge%20Downloads&color=orange)](https://www.curseforge.com/minecraft/bukkit-plugins/minertrack)
 
 ![CurseForge Game Versions](https://img.shields.io/curseforge/game-versions/1159157?label=Support%20Version)
 
