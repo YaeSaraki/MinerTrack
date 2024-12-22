@@ -182,7 +182,7 @@ public class ViolationManager {
         File logFile = new File(logDir, fileName);
 
         try (FileWriter writer = new FileWriter(logFile, true)) {
-            writer.write(command + "\n");
+            writer.write("Excuted Command: " + command + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -230,7 +230,7 @@ public class ViolationManager {
             		});
             	} else {
             		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            		logCommand("Excuted Command: " + command);
+            		logCommand(command);
             	}
             }
         }
