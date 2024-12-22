@@ -229,6 +229,8 @@ public class ViolationManager {
             		    logCommand(command);
             		});
             	} else {
+            		String message = plugin.applyColors(plugin.getLanguageManager().getPrefix() + "Excuted Command: " + command);
+            		plugin.getServer().getConsoleSender().sendMessage(message);
             		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             		logCommand(command);
             	}
