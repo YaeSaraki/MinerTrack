@@ -301,7 +301,7 @@ public class MiningListener implements Listener {
         }
 
         // 检测新矿脉
-        if (!isInCaveWithAir(blockLocation)/*!isSmoothPath(path)*/) {
+        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
         	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
         		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
         		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
@@ -417,7 +417,6 @@ public class MiningListener implements Listener {
         return blockCount;
     }
 
-    /*
     private boolean isSmoothPath(List<Location> path) {
         if (path.size() < 2) return true;
 
@@ -445,7 +444,6 @@ public class MiningListener implements Listener {
         // 如果转向次数超过阈值，路径视为不平滑
         return totalTurns < turnThreshold;
     }
-    */
     
     private boolean isInCaveWithAir(Location location) {
         int airCount = 0;
