@@ -18,7 +18,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
@@ -301,7 +303,7 @@ public class MiningListener implements Listener {
         }
 
         // 检测新矿脉
-        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
+        if (!isInNaturalEnvironment(blockLocation) && !isSmoothPath(path)) {
         	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
         		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
         		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
@@ -421,11 +423,18 @@ public class MiningListener implements Listener {
         if (path.size() < 2) return true;
 
         int totalTurns = 0;
+        int branchCount = 0;
+        int yChanges = 0;
+
         int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
+        int branchThreshold = plugin.getConfigManager().getBranchCountThreshold(); // 新增配置
+        int yChangeThreshold = plugin.getConfigManager().getYChangeThreshold();   // 新增配置
+
         Location lastLocation = null;
         Vector lastDirection = null;
 
-        for (Location currentLocation : path) {
+        for (int i = 0; i < path.size(); i++) {
+            Location currentLocation = path.get(i);
             if (lastLocation != null) {
                 // 当前方向向量
                 Vector currentDirection = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
@@ -433,50 +442,95 @@ public class MiningListener implements Listener {
                 if (lastDirection != null) {
                     // 计算方向变化的角度（转向幅度）
                     double dotProduct = lastDirection.dot(currentDirection);
-                    if (dotProduct < Math.cos(Math.toRadians(45))) { // 夹角大于45度，记为一次转向
+                    if (dotProduct < Math.cos(Math.toRadians(30))) { // 夹角大于30度，记为一次转向
                         totalTurns++;
                     }
                 }
+
+                // 检查Y轴的变化
+                if (Math.abs(currentLocation.getY() - lastLocation.getY()) > 1) {
+                    yChanges++;
+                }
+
+                // 检查分支（检测是否突然偏离主方向）
+                if (i > 1) {
+                    Location prevLocation = path.get(i - 1);
+                    Vector prevDirection = prevLocation.toVector().subtract(lastLocation.toVector()).normalize();
+                    if (currentDirection.angle(prevDirection) > Math.toRadians(60)) { // 分支角度大于60°
+                        branchCount++;
+                    }
+                }
+
                 lastDirection = currentDirection;
             }
             lastLocation = currentLocation;
         }
-        // 如果转向次数超过阈值，路径视为不平滑
-        return totalTurns < turnThreshold;
+
+        // 检查总转向次数、分支次数和Y轴变化是否超过阈值
+        return totalTurns < turnThreshold && branchCount < branchThreshold && yChanges < yChangeThreshold;
     }
     
-    private boolean isInCaveWithAir(Location location) {
+    private boolean isInNaturalEnvironment(Location location) {
+    	if (!plugin.getConfigManager().getNaturalEnable()) return false;
+    	
         int airCount = 0;
-        int threshold = plugin.getConfigManager().getCaveBypassAirCount();
-        int range = plugin.getConfigManager().getCaveCheckDetection();
+        int waterCount = 0;
+        int lavaCount = 0;
+
+        int caveAirMultiplier = plugin.getConfigManager().getCaveAirMultiplier();
+        int airThreshold = plugin.getConfigManager().getCaveBypassAirThreshold();
+        int detectionRange = plugin.getConfigManager().getCaveDetectionRange();
+
+        int waterThreshold = plugin.getConfigManager().getWaterThreshold();
+        int lavaThreshold = plugin.getConfigManager().getLavaThreshold();
+
+        boolean checkRunningWater = plugin.getConfigManager().isRunningWaterCheckEnabled();
 
         int baseX = location.getBlockX();
         int baseY = location.getBlockY();
         int baseZ = location.getBlockZ();
 
-        for (int x = -range; x <= range; x++) {
-            for (int y = -range; y <= range; y++) {
-                for (int z = -range; z <= range; z++) {
+        for (int x = -detectionRange; x <= detectionRange; x++) {
+            for (int y = -detectionRange; y <= detectionRange; y++) {
+                for (int z = -detectionRange; z <= detectionRange; z++) {
                     Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
-                    if (type == Material.CAVE_AIR) {
-                        airCount =+ plugin.getConfigManager().CaveAirMultiplier();
-                    } else if (type == Material.AIR) {
-                        airCount++;
+                    switch (type) {
+                        case CAVE_AIR:
+                            airCount += caveAirMultiplier;
+                            break;
+                        case AIR:
+                            airCount++;
+                            break;
+                        case WATER:
+                            if (checkRunningWater || isWaterStill(location.getWorld(), baseX + x, baseY + y, baseZ + z)) {
+                                waterCount++;
+                            }
+                            break;
+                        case LAVA:
+                            lavaCount++;
+                            break;
+                        default:
+                            break;
                     }
                 }
             }
         }
-        
-        if (airCount > threshold) {
-        	if (!plugin.getConfigManager().caveSkipVL()) {
-                return false;
-        	} else {
-                return true;
-        	}
-        }
-        
+
+        if (airCount > airThreshold && plugin.getConfigManager().isCaveSkipVL()) return true;
+        if (waterCount > waterThreshold && plugin.getConfigManager().isSeaSkipVL()) return true;
+        if (lavaCount > lavaThreshold && plugin.getConfigManager().isLavaSeaSkipVL()) return true;
+
         return false;
     }
+
+    private boolean isWaterStill(World world, int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        if (block.getType() == Material.WATER) {
+            return block.getBlockData() instanceof Levelled && ((Levelled) block.getBlockData()).getLevel() == 0;
+        }
+        return false;
+    }
+
     
     private void analyzeMiningPath(Player player, List<Location> path, Material blockType, int count, Location blockLocation) {
         UUID playerId = player.getUniqueId();
