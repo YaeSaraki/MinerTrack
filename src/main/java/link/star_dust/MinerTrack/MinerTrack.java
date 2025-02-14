@@ -52,6 +52,7 @@ public class MinerTrack extends JavaPlugin {
     private final Set<UUID> verbosePlayers = new HashSet<>();
     private boolean verboseConsole = false;
     private UpdateManager updateManager;
+    private String ColoredVersion;
     public MiningDetectionExtension miningDetectionExtension;
 
     @Override
@@ -71,8 +72,20 @@ public class MinerTrack extends JavaPlugin {
         registerCommands();
         registerListeners();
         getCommand("minertrack").setExecutor(new MinerTrackCommand(this));
-
-        getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
+        
+        if (getConfigManager().updateCheck()) {
+        	boolean isHasNewerVersion = updateManager.isHasNewerVersion();
+            
+            if(isHasNewerVersion) {
+            	ColoredVersion = "&cv" + getDescription().getVersion();
+            } else {
+            	ColoredVersion = "&av" + getDescription().getVersion();
+            }
+        } else {
+        	ColoredVersion = "&av" + getDescription().getVersion();
+        }
+        
+		getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack " + ColoredVersion + " &8]-----------"));
         getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &aEnabled!"));
         getServer().getConsoleSender().sendMessage(applyColors(""));
         getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));
@@ -166,10 +179,15 @@ public class MinerTrack extends JavaPlugin {
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+    	if (!configManager.updateCheck()) {
+    		return;
+    	}
+    	
         Player player = event.getPlayer();
 
-        if (player.hasPermission("minertrack.checkupdate")) {
-            updateManager.checkForUpdates(player);  // Call UpdateManager for player-specific check
+        if (player.hasPermission("minertrack.checkupdate") && updateManager.isHasNewerVersion()) {
+        	player.sendMessage(updateManager.updateMessageOnPlayerJoin());  // Call UpdateManager for player-specific check
+            //updateManager.checkForUpdates(player);
         }
     }
 
@@ -179,7 +197,7 @@ public class MinerTrack extends JavaPlugin {
 
     @Override
     public void onDisable() {
-    	getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack &bv" + getDescription().getVersion() + " &8]-----------"));
+    	getServer().getConsoleSender().sendMessage(applyColors("&8----[&9&lMiner&c&lTrack " + ColoredVersion + " &8]-----------"));
     	getServer().getConsoleSender().sendMessage(applyColors("&9&lMiner&c&lTrack &4&oAnti-XRay &cDisabled!"));
     	getServer().getConsoleSender().sendMessage(applyColors(""));
         getServer().getConsoleSender().sendMessage(applyColors("&7Authors: Author87668"));

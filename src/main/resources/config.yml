@@ -54,8 +54,6 @@ DiscordWebHook:
 #############################################################################################################################
 
 xray:
-  enable: true  # Enable X-ray detection
-
   # At what height should I start detecting X-Ray?
   # Worlds that are not listed do not have XRay detection.
   worlds:

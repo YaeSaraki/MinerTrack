@@ -111,10 +111,6 @@ public class MiningListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-    	if (!plugin.getConfig().getBoolean("xray.enable", true)) {
-            return;
-        }
-    	
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
@@ -232,10 +228,6 @@ public class MiningListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        if (!plugin.getConfig().getBoolean("xray.enable", true)) {
-            return;
-        }
-
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();

@@ -14,6 +14,7 @@ package link.star_dust.MinerTrack.managers;
 import link.star_dust.MinerTrack.MinerTrack;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -24,21 +25,32 @@ import java.net.URL;
 
 public class UpdateManager {
     private final MinerTrack plugin;
+	private boolean isHasNewerVersion;
+	private String latestVersion;
+	private String currentVersion;
 
     public UpdateManager(MinerTrack plugin) {
         this.plugin = plugin;
+        
+        latestVersion = getLatestVersionFromSpigot();
+        currentVersion = plugin.getDescription().getVersion();
+        
+        if(isNewerVersion(latestVersion, currentVersion)) {
+        	isHasNewerVersion = true;
+        } else {
+        	isHasNewerVersion = false;
+        }
     }
 
     public void checkForUpdates(CommandSender sender) {
-        String latestVersion = getLatestVersionFromSpigot();
-        String currentVersion = plugin.getDescription().getVersion();
-
+    	latestVersion = getLatestVersionFromSpigot();
+    	
         if (latestVersion == null) {
             sendMessage(sender, "&8[&9&lMiner&c&lTrack&8]&r &cFailed to check for updates.");
             return;
         }
 
-        if (isNewerVersion(latestVersion, currentVersion)) {
+        if (isHasNewerVersion) {
             sendUpdateMessage(sender, latestVersion);
         } else {
             sendMessage(sender, "&8[&9&lMiner&c&lTrack&8]&r &2You are using the latest version.");
@@ -46,6 +58,7 @@ public class UpdateManager {
     }
 
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
+    	latestVersion = getLatestVersionFromSpigot();
         String latest = latestVersion.split("-")[0];
         String current = currentVersion.split("-")[0];
 
@@ -61,17 +74,29 @@ public class UpdateManager {
                 return false;
             }
         }
+        
         return false;
     }
+    
+    public boolean isHasNewerVersion() {
+        return isHasNewerVersion;
+    }
+    
+    private String updateMessage;
 
     private void sendUpdateMessage(CommandSender sender, String latestVersion) {
-        String updateMessage;
-        if (latestVersion.contains("-beta") || latestVersion.contains("-snapshot")) {
+        if (latestVersion.contains("-beta")) {
             updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &eNew beta version " + latestVersion + " now available!";
+        } else if(latestVersion.contains("-alpha")) {
+        	updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &cNew alpha version " + latestVersion + " now available!";
         } else {
             updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &aNew stable version " + latestVersion + " now available!";
         }
         sendMessage(sender, updateMessage);
+    }
+    
+    public String updateMessageOnPlayerJoin() {
+    	return updateMessage;
     }
 
     private void sendMessage(CommandSender sender, String message) {
