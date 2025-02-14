@@ -54,69 +54,49 @@ public class ConfigManager {
      * @param defaultConfig The default configuration to merge from.
      */
     private void mergeConfigurations(ConfigurationSection currentConfig, ConfigurationSection defaultConfig, String currentPath) {
-    	Set<String> whitelistKeys = Set.of(
-    		    "check_update",
-    		    "kick_strike_lightning",
-    		    "log_file",
-    		    "delete_time",
-    		    "disable_bypass_permission",
-    		    "DiscordWebHook",
-    		    "DiscordWebHook.enable",
-    		    "DiscordWebHook.WebHookURL",
-    		    "DiscordWebHook.vl-required",
-    		    "DiscordWebHook.vl-add-message",
-    		    "DiscordWebHook.vl-add-message.color",
-    		    "DiscordWebHook.vl-add-message.title",
-    		    "DiscordWebHook.vl-add-message.text",
-    		    "xray",
-    		    "xray.enable",
-    		    "xray.worlds",
-    		    "xray.worlds.world",
-    		    "xray.worlds.all_unnamed_world",
-    		    "xray.worlds.all_unnamed_world.enable",
-    		    "xray.rare-ores",
-    		    "xray.max_path_length",
-    		    "xray.trace_remove",
-    		    "xray.cave-detection",
-                "xray.cave-detection.air-threshold",
-                "xray.cave-detection.air-detection-range",
-                "xray.cave-detection.cave_check_skip_vl",
-                "xray.cave-detection.CaveAirMultiplier",
-                "xray.cave-detection.max_vein_distance",
-    		    "xray.max_vein_distance",
-    		    "xray.veinCountThreshold",
-    		    "xray.path-detection",
-    		    "xray.path-detection.turn-count-threshold",
-    		    "xray.path-detection.branch-count-threshold",
-    		    "xray.path-detection.y-change-threshold",
-    		    /*"xray.natural-detection",
-    		    "xray.natural-detection.enable",
-    		    "xray.natural-detection.cave",
-    		    "xray.natural-detection.cave.air-threshold",
-    		    "xray.natural-detection.cave.CaveAirMultiplier",
-    		    "xray.natural-detection.cave.detection-range",
-    		    "xray.natural-detection.cave.check_skip_vl",
-    		    "xray.natural-detection.sea",
-    		    "xray.natural-detection.sea.check-running-water",
-    		    "xray.natural-detection.sea.water-threshold",
-    		    "xray.natural-detection.sea.detection-range",
-    		    "xray.natural-detection.sea.check_skip_vl",
-    		    "xray.natural-detection.lava-sea",
-    		    "xray.natural-detection.lava-sea.lava-threshold",
-    		    "xray.natural-detection.lava-sea.detection-range",
-    		    "xray.natural-detection.lava-sea.check_skip_vl",*/
-    		    "xray.decay",
-    		    "xray.decay.interval",
-    		    "xray.decay.amount",
-    		    "xray.decay.use_factor",
-    		    "xray.decay.factor",
-    		    "explosion",
-    		    "explosion.entity-explode-check",
-    		    "explosion.explosion_retention_time",
-    		    "explosion.base_vl_rate",
-    		    "explosion.suspicious_hit_rate",
-    		    "commands"
-    		);
+        Set<String> whitelistKeys = Set.of(
+        	"xray",
+        	"check_update",
+        	"kick_strike_lightning",
+        	"log_file",
+        	"delete_time",
+            "disable_bypass_permission",
+            "xray.enable",
+            "xray.worlds",
+            "xray.worlds.all_unnamed_world",
+            "xray.worlds.all_unnamed_world.enable",
+            "xray.rare-ores",
+            "xray.trace_back_length",
+            "xray.max_path_length",
+            "xray.trace_remove",
+            "xray.cave-detection",
+            "xray.cave-detection.air-threshold",
+            "xray.cave-detection.air-detection-range",
+            "xray.cave-detection.cave_check_skip_vl",
+            "xray.cave-detection.CaveAirMultiplier",
+            "xray.cave-detection.max_vein_distance",
+            "xray.decay.interval",
+            "xray.decay.amount",
+            "xray.decay.factor",
+            "xray.decay.use_factor",
+            "xray.decay",
+            "explosion.entity-explode-check",
+            "explosion.explosion_retention_time",
+            "explosion.base_vl_rate",
+            "explosion.suspicious_hit_rate",
+            "explosion",
+            "DiscordWebHook",
+            "DiscordWebHook.enable",
+            "DiscordWebHook.WebHookURL",
+            "DiscordWebHook.vl-required",
+            "DiscordWebHook.vl-add-message",
+            "DiscordWebHook.vl-add-message.color",
+            "DiscordWebHook.vl-add-message.title",
+            "DiscordWebHook.vl-add-message.text",
+            "xray.ViolationThreshold.turnCountThreshold",
+            "xray.ViolationThreshold.veinCountThreshold",
+            "xray.ViolationThreshold"
+        );
 
         for (String key : defaultConfig.getKeys(false)) {
             String fullKeyPath = (currentPath.isEmpty() ? "" : currentPath + ".") + key;
@@ -180,19 +160,19 @@ public class ConfigManager {
     }
 
     public int getVeinCountThreshold() {
-        return config.getInt("xray.veinCountThreshold", 3);
+        return config.getInt("xray.ViolationThreshold.veinCountThreshold", 3);
     }
 
     public int getTurnCountThreshold() {
-        return config.getInt("xray.path-detection.turn-count-threshold", 10);
+        return config.getInt("xray.ViolationThreshold.turnCountThreshold", 10);
     }
-    
-    public int getBranchCountThreshold() {
-        return config.getInt("xray.path-detection.branch-count-threshold", 6);
+
+    public int getCaveBypassAirCount() {
+        return config.getInt("xray.cave-detection.air-threshold", 14);
     }
-    
-    public int getYChangeThreshold() {
-        return config.getInt("xray.path-detection.y-change-threshold", 4);
+
+    public int getCaveCheckDetection() {
+        return config.getInt("xray.cave-detection.air-detection-range", 3);
     }
 
     public int getWorldMaxHeight(String worldName) {
@@ -225,55 +205,7 @@ public class ConfigManager {
     }
 
     public int getMaxVeinDistance() {
-        return config.getInt("xray.max_vein_distance", 5);
-    }
-    
-    public boolean getNaturalEnable() {
-        return config.getBoolean("xray.natural-detection.enable", true);
-    }
-    
-    public int getCaveBypassAirThreshold() {
-        return config.getInt("xray.cave-detection.air-threshold", 14);
-    }
-
-    public int getCaveAirMultiplier() {
-        return config.getInt("xray.cave-detection.CaveAirMultiplier", 5);
-    }
-
-    public int getCaveDetectionRange() {
-        return config.getInt("xray.cave-detection.air-detection-range", 3);
-    }
-
-    public boolean isCaveSkipVL() {
-        return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
-    }
-
-    public boolean isRunningWaterCheckEnabled() {
-        return config.getBoolean("xray.natural-detection.sea.check-running-water", false);
-    }
-
-    public int getWaterThreshold() {
-        return config.getInt("xray.natural-detection.sea.water-threshold", 14);
-    }
-
-    public int getWaterDetectionRange() {
-        return config.getInt("xray.natural-detection.sea.detection-range", 3);
-    }
-
-    public boolean isSeaSkipVL() {
-        return config.getBoolean("xray.natural-detection.sea.check_skip_vl", true);
-    }
-
-    public int getLavaThreshold() {
-        return config.getInt("xray.natural-detection.lava-sea.lava-threshold", 14);
-    }
-
-    public int getLavaDetectionRange() {
-        return config.getInt("xray.natural-detection.lava-sea.detection-range", 3);
-    }
-
-    public boolean isLavaSeaSkipVL() {
-        return config.getBoolean("xray.natural-detection.lava-sea.check_skip_vl", true);
+        return config.getInt("xray.cave-detection.max_vein_distance", 5);
     }
 
     public int traceBackLength() {
@@ -284,8 +216,16 @@ public class ConfigManager {
         return config.getBoolean("check_update", true);
     }
 
+    public boolean caveSkipVL() {
+        return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
+    }
+
 	public int getSuspicionThreshold() {
 		return config.getInt("xray.mine.suspicionThreshold", 100);
+	}
+
+	public int CaveAirMultiplier() {
+		return config.getInt("xray.cave-detection.CaveAirMultiplier", 5);
 	}
 	
 	public String WebHookURL() {

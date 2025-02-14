@@ -18,9 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
@@ -423,18 +421,11 @@ public class MiningListener implements Listener {
         if (path.size() < 2) return true;
 
         int totalTurns = 0;
-        int branchCount = 0;
-        int yChanges = 0;
-
         int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
-        int branchThreshold = plugin.getConfigManager().getBranchCountThreshold();
-        int yChangeThreshold = plugin.getConfigManager().getYChangeThreshold();
-
         Location lastLocation = null;
         Vector lastDirection = null;
 
-        for (int i = 0; i < path.size(); i++) {
-            Location currentLocation = path.get(i);
+        for (Location currentLocation : path) {
             if (lastLocation != null) {
                 // 当前方向向量
                 Vector currentDirection = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
@@ -442,38 +433,22 @@ public class MiningListener implements Listener {
                 if (lastDirection != null) {
                     // 计算方向变化的角度（转向幅度）
                     double dotProduct = lastDirection.dot(currentDirection);
-                    if (dotProduct < Math.cos(Math.toRadians(30))) { // 夹角大于30度，记为一次转向
+                    if (dotProduct < Math.cos(Math.toRadians(45))) { // 夹角大于45度，记为一次转向
                         totalTurns++;
                     }
                 }
-
-                // 检查Y轴的变化
-                if (Math.abs(currentLocation.getY() - lastLocation.getY()) > 1) {
-                    yChanges++;
-                }
-
-                // 检查分支（检测是否突然偏离主方向）
-                if (i > 1) {
-                    Location prevLocation = path.get(i - 1);
-                    Vector prevDirection = prevLocation.toVector().subtract(lastLocation.toVector()).normalize();
-                    if (currentDirection.angle(prevDirection) > Math.toRadians(60)) { // 分支角度大于60°
-                        branchCount++;
-                    }
-                }
-
                 lastDirection = currentDirection;
             }
             lastLocation = currentLocation;
         }
-
-        // 检查总转向次数、分支次数和Y轴变化是否超过阈值
-        return totalTurns < turnThreshold && branchCount < branchThreshold && yChanges < yChangeThreshold;
+        // 如果转向次数超过阈值，路径视为不平滑
+        return totalTurns < turnThreshold;
     }
     
     private boolean isInCaveWithAir(Location location) {
         int airCount = 0;
-        int threshold = plugin.getConfigManager().getCaveBypassAirThreshold();
-        int range = plugin.getConfigManager().getCaveDetectionRange();
+        int threshold = plugin.getConfigManager().getCaveBypassAirCount();
+        int range = plugin.getConfigManager().getCaveCheckDetection();
 
         int baseX = location.getBlockX();
         int baseY = location.getBlockY();
@@ -484,7 +459,7 @@ public class MiningListener implements Listener {
                 for (int z = -range; z <= range; z++) {
                     Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
                     if (type == Material.CAVE_AIR) {
-                        airCount =+ plugin.getConfigManager().getCaveAirMultiplier();
+                        airCount =+ plugin.getConfigManager().CaveAirMultiplier();
                     } else if (type == Material.AIR) {
                         airCount++;
                     }
@@ -493,7 +468,7 @@ public class MiningListener implements Listener {
         }
         
         if (airCount > threshold) {
-        	if (!plugin.getConfigManager().isCaveSkipVL()) {
+        	if (!plugin.getConfigManager().caveSkipVL()) {
                 return false;
         	} else {
                 return true;
@@ -502,7 +477,6 @@ public class MiningListener implements Listener {
         
         return false;
     }
-
     
     private void analyzeMiningPath(Player player, List<Location> path, Material blockType, int count, Location blockLocation) {
         UUID playerId = player.getUniqueId();

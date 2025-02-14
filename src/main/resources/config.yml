@@ -92,23 +92,19 @@ xray:
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 15
   
-  max_vein_distance: 5  # When two veins are close together, VL is not increased.
-  
-  # VL is increased as the player digs the number of veins
-  veinCountThreshold: 3
-  
-  path-detection:
-    turn-count-threshold: 10 # Maximum number of turns threshold
-    branch-count-threshold: 6 # Maximum number of branches (Not use on 1.6.6-dev)
-    y-change-threshold: 4 # maximum Y-axis change threshold
-
   # Cave Detection
   cave-detection:
     # Satisfying the air-threshold will think they are in a cave.
+    max_vein_distance: 5     # When two veins are close together, VL is not increased.
     air-threshold: 14        # When the number of air blocks reaches several, the player is considered to be in a cave?
     CaveAirMultiplier: 5     # If cave air is found, regarded as how many ordinary air?
     air-detection-range: 3   # 3 = 7x7x7, 2 = 5x5x5
     cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
+    
+  # Player need to meet the following conditions in order to increase VL
+  ViolationThreshold:
+    veinCountThreshold: 3
+    turnCountThreshold: 10
 
   # Violation level decay settings (Unit: minute)
   decay:
