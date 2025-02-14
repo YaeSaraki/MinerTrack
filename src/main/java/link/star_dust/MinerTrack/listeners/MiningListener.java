@@ -411,6 +411,7 @@ public class MiningListener implements Listener {
         return blockCount;
     }
 
+    /*
     private boolean isSmoothPath(List<Location> path) {
         if (path.size() < 2) return true;
 
@@ -460,6 +461,35 @@ public class MiningListener implements Listener {
 
         // 检查总转向次数、分支次数和Y轴变化是否超过阈值
         return totalTurns < turnThreshold && branchCount < branchThreshold && yChanges < yChangeThreshold;
+    }
+        */
+    
+    private boolean isSmoothPath(List<Location> path) {
+        if (path.size() < 2) return true;
+
+        int totalTurns = 0;
+        int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
+        Location lastLocation = null;
+        Vector lastDirection = null;
+
+        for (Location currentLocation : path) {
+            if (lastLocation != null) {
+                // 当前方向向量
+                Vector currentDirection = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
+
+                if (lastDirection != null) {
+                    // 计算方向变化的角度（转向幅度）
+                    double dotProduct = lastDirection.dot(currentDirection);
+                    if (dotProduct < Math.cos(Math.toRadians(45))) { // 夹角大于45度，记为一次转向
+                        totalTurns++;
+                    }
+                }
+                lastDirection = currentDirection;
+            }
+            lastLocation = currentLocation;
+        }
+        // 如果转向次数超过阈值，路径视为不平滑
+        return totalTurns < turnThreshold;
     }
     
     private boolean isInNaturalEnvironment(Location location) {
