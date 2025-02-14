@@ -77,13 +77,19 @@ public class ConfigManager {
     		    "xray.rare-ores",
     		    "xray.max_path_length",
     		    "xray.trace_remove",
+    		    "xray.cave-detection",
+                "xray.cave-detection.air-threshold",
+                "xray.cave-detection.air-detection-range",
+                "xray.cave-detection.cave_check_skip_vl",
+                "xray.cave-detection.CaveAirMultiplier",
+                "xray.cave-detection.max_vein_distance",
     		    "xray.max_vein_distance",
     		    "xray.veinCountThreshold",
     		    "xray.path-detection",
     		    "xray.path-detection.turn-count-threshold",
     		    "xray.path-detection.branch-count-threshold",
     		    "xray.path-detection.y-change-threshold",
-    		    "xray.natural-detection",
+    		    /*"xray.natural-detection",
     		    "xray.natural-detection.enable",
     		    "xray.natural-detection.cave",
     		    "xray.natural-detection.cave.air-threshold",
@@ -98,7 +104,7 @@ public class ConfigManager {
     		    "xray.natural-detection.lava-sea",
     		    "xray.natural-detection.lava-sea.lava-threshold",
     		    "xray.natural-detection.lava-sea.detection-range",
-    		    "xray.natural-detection.lava-sea.check_skip_vl",
+    		    "xray.natural-detection.lava-sea.check_skip_vl",*/
     		    "xray.decay",
     		    "xray.decay.interval",
     		    "xray.decay.amount",
@@ -227,19 +233,19 @@ public class ConfigManager {
     }
     
     public int getCaveBypassAirThreshold() {
-        return config.getInt("xray.natural-detection.cave.air-threshold", 14);
+        return config.getInt("xray.cave-detection.air-threshold", 14);
     }
 
     public int getCaveAirMultiplier() {
-        return config.getInt("xray.natural-detection.cave.CaveAirMultiplier", 5);
+        return config.getInt("xray.cave-detection.CaveAirMultiplier", 5);
     }
 
     public int getCaveDetectionRange() {
-        return config.getInt("xray.natural-detection.cave.detection-range", 3);
+        return config.getInt("xray.cave-detection.air-detection-range", 3);
     }
 
     public boolean isCaveSkipVL() {
-        return config.getBoolean("xray.natural-detection.cave.check_skip_vl", true);
+        return config.getBoolean("xray.cave-detection.cave_check_skip_vl", true);
     }
 
     public boolean isRunningWaterCheckEnabled() {

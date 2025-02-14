@@ -111,6 +111,10 @@ public class MiningListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
+    	if (!plugin.getConfig().getBoolean("xray.enable", true)) {
+            return;
+        }
+    	
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
@@ -228,6 +232,10 @@ public class MiningListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        if (!plugin.getConfig().getBoolean("xray.enable", true)) {
+            return;
+        }
+
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         Material blockType = event.getBlock().getType();
@@ -295,7 +303,7 @@ public class MiningListener implements Listener {
         }
 
         // 检测新矿脉
-        if (!isInNaturalEnvironment(blockLocation) && !isSmoothPath(path)) {
+        if (!isInCaveWithAir(blockLocation) && !isSmoothPath(path)) {
         	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
         		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
         		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
@@ -411,7 +419,6 @@ public class MiningListener implements Listener {
         return blockCount;
     }
 
-    /*
     private boolean isSmoothPath(List<Location> path) {
         if (path.size() < 2) return true;
 
@@ -420,8 +427,8 @@ public class MiningListener implements Listener {
         int yChanges = 0;
 
         int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
-        int branchThreshold = plugin.getConfigManager().getBranchCountThreshold(); // 新增配置
-        int yChangeThreshold = plugin.getConfigManager().getYChangeThreshold();   // 新增配置
+        int branchThreshold = plugin.getConfigManager().getBranchCountThreshold();
+        int yChangeThreshold = plugin.getConfigManager().getYChangeThreshold();
 
         Location lastLocation = null;
         Vector lastDirection = null;
@@ -462,94 +469,37 @@ public class MiningListener implements Listener {
         // 检查总转向次数、分支次数和Y轴变化是否超过阈值
         return totalTurns < turnThreshold && branchCount < branchThreshold && yChanges < yChangeThreshold;
     }
-        */
     
-    private boolean isSmoothPath(List<Location> path) {
-        if (path.size() < 2) return true;
-
-        int totalTurns = 0;
-        int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
-        Location lastLocation = null;
-        Vector lastDirection = null;
-
-        for (Location currentLocation : path) {
-            if (lastLocation != null) {
-                // 当前方向向量
-                Vector currentDirection = currentLocation.toVector().subtract(lastLocation.toVector()).normalize();
-
-                if (lastDirection != null) {
-                    // 计算方向变化的角度（转向幅度）
-                    double dotProduct = lastDirection.dot(currentDirection);
-                    if (dotProduct < Math.cos(Math.toRadians(45))) { // 夹角大于45度，记为一次转向
-                        totalTurns++;
-                    }
-                }
-                lastDirection = currentDirection;
-            }
-            lastLocation = currentLocation;
-        }
-        // 如果转向次数超过阈值，路径视为不平滑
-        return totalTurns < turnThreshold;
-    }
-    
-    private boolean isInNaturalEnvironment(Location location) {
-    	if (!plugin.getConfigManager().getNaturalEnable()) return false;
-    	
+    private boolean isInCaveWithAir(Location location) {
         int airCount = 0;
-        int waterCount = 0;
-        int lavaCount = 0;
-
-        int caveAirMultiplier = plugin.getConfigManager().getCaveAirMultiplier();
-        int airThreshold = plugin.getConfigManager().getCaveBypassAirThreshold();
-        int detectionRange = plugin.getConfigManager().getCaveDetectionRange();
-
-        int waterThreshold = plugin.getConfigManager().getWaterThreshold();
-        int lavaThreshold = plugin.getConfigManager().getLavaThreshold();
-
-        boolean checkRunningWater = plugin.getConfigManager().isRunningWaterCheckEnabled();
+        int threshold = plugin.getConfigManager().getCaveBypassAirThreshold();
+        int range = plugin.getConfigManager().getCaveDetectionRange();
 
         int baseX = location.getBlockX();
         int baseY = location.getBlockY();
         int baseZ = location.getBlockZ();
 
-        for (int x = -detectionRange; x <= detectionRange; x++) {
-            for (int y = -detectionRange; y <= detectionRange; y++) {
-                for (int z = -detectionRange; z <= detectionRange; z++) {
+        for (int x = -range; x <= range; x++) {
+            for (int y = -range; y <= range; y++) {
+                for (int z = -range; z <= range; z++) {
                     Material type = location.getWorld().getBlockAt(baseX + x, baseY + y, baseZ + z).getType();
-                    switch (type) {
-                        case CAVE_AIR:
-                            airCount += caveAirMultiplier;
-                            break;
-                        case AIR:
-                            airCount++;
-                            break;
-                        case WATER:
-                            if (checkRunningWater || isWaterStill(location.getWorld(), baseX + x, baseY + y, baseZ + z)) {
-                                waterCount++;
-                            }
-                            break;
-                        case LAVA:
-                            lavaCount++;
-                            break;
-                        default:
-                            break;
+                    if (type == Material.CAVE_AIR) {
+                        airCount =+ plugin.getConfigManager().getCaveAirMultiplier();
+                    } else if (type == Material.AIR) {
+                        airCount++;
                     }
                 }
             }
         }
-
-        if (airCount > airThreshold && plugin.getConfigManager().isCaveSkipVL()) return true;
-        if (waterCount > waterThreshold && plugin.getConfigManager().isSeaSkipVL()) return true;
-        if (lavaCount > lavaThreshold && plugin.getConfigManager().isLavaSeaSkipVL()) return true;
-
-        return false;
-    }
-
-    private boolean isWaterStill(World world, int x, int y, int z) {
-        Block block = world.getBlockAt(x, y, z);
-        if (block.getType() == Material.WATER) {
-            return block.getBlockData() instanceof Levelled && ((Levelled) block.getBlockData()).getLevel() == 0;
+        
+        if (airCount > threshold) {
+        	if (!plugin.getConfigManager().isCaveSkipVL()) {
+                return false;
+        	} else {
+                return true;
+        	}
         }
+        
         return false;
     }
 
