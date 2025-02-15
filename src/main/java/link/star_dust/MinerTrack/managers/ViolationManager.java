@@ -225,12 +225,12 @@ public class ViolationManager {
             	if (FoliaCheck.isFolia()) {
             		RegionScheduler regionScheduler = Bukkit.getRegionScheduler();
             		regionScheduler.run(plugin, location, scheduledTask -> {
-            		    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            		    logCommand(command);
+            			Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+            	            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            	            logCommand(command);
+            	        });
             		});
             	} else {
-            		String message = plugin.applyColors(plugin.getLanguageManager().getPrefix() + "&8Excuted Command: " + command);
-            		plugin.getServer().getConsoleSender().sendMessage(message);
             		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             		logCommand(command);
             	}

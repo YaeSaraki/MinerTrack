@@ -92,19 +92,35 @@ xray:
   # Path record is reset after the player VL is 0 {n} minutes.
   trace_remove: 15
   
-  # Cave Detection
-  cave-detection:
-    # Satisfying the air-threshold will think they are in a cave.
-    max_vein_distance: 5     # When two veins are close together, VL is not increased.
-    air-threshold: 14        # When the number of air blocks reaches several, the player is considered to be in a cave?
-    CaveAirMultiplier: 5     # If cave air is found, regarded as how many ordinary air?
-    air-detection-range: 3   # 3 = 7x7x7, 2 = 5x5x5
-    cave_check_skip_vl: true # VL add of whether or not to skip cave behavior
+  max_vein_distance: 5  # When two veins are close together, VL is not increased.
+  
+  # VL is increased as the player digs the number of veins
+  veinCountThreshold: 3
+  
+  path-detection:
+    turn-count-threshold: 10 # Maximum number of turns threshold
+    branch-count-threshold: 6 # Maximum number of branches
+    y-change-threshold: 4 # maximum Y-axis change threshold
+
+  # Natural Detection
+  natural-detection:
+    enable: true
     
-  # Player need to meet the following conditions in order to increase VL
-  ViolationThreshold:
-    veinCountThreshold: 3
-    turnCountThreshold: 10
+    # Satisfying the conditions will think they are in a natural.
+    cave:
+      air-threshold: 14        # When the number of air blocks reaches several, the player is considered to be in a cave?
+      CaveAirMultiplier: 5     # If cave air is found, regarded as how many ordinary air?
+      detection-range: 3       # 3 = 7x7x7, 2 = 5x5x5
+      check_skip_vl: true      # VL add of whether or not to skip natural behavior
+    sea:
+      check-running-water: false  # Should we check running water?
+      water-threshold: 14
+      detection-range: 3
+      check_skip_vl: true
+    lava-sea:
+      lava-threshold: 14
+      detection-range: 3
+      check_skip_vl: true
 
   # Violation level decay settings (Unit: minute)
   decay:
@@ -115,6 +131,6 @@ xray:
 
   # Commands executed at specified violation thresholds
   commands:
+    2: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 2&7]'
     3: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 3&7]'
-    5: 'minertrack notify &f%player% &7triggered &fX-Ray &7detection [&cVL: 5&7]'
-    6: 'minertrack kick %player% X-Ray'
+    4: 'minertrack kick %player% X-Ray'
