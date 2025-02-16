@@ -87,7 +87,19 @@ Compared to other AntiXray solutions:
 
 If you encounter any issues or have suggestions for new features, feel free to reach out via SpigotMC or open an issue on the plugin’s GitHub repository.
 
-**Join Our Discord: https://discord.gg/MzTea2W9cb**
+
+
+**View Source: https://github.com/At87668/MinerTrack**
+
+**Report Issue: https://github.com/At87668/MinerTrack/issues**
+
+**Pull Requset: https://github.com/At87668/MinerTrack/pulls**
+
+**View Wiki: https://minertrack.pages.dev/**
+
+**Join Discord: https://discord.gg/MzTea2W9cb**
+
+
 
 [![bStats](https://bstats.org/signatures/bukkit/MinerTrack.svg)](https://bstats.org/plugin/bukkit/MinerTrack/23790)
 
