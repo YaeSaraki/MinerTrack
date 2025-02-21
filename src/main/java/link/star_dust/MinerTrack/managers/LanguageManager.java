@@ -122,4 +122,14 @@ public class LanguageManager {
             plugin.getLogger().severe("Could not reload language configuration: " + e.getMessage());
         }
     }
+
+    public String getPrefixedMessageWithDefault(String key, String defaultMessage) {
+        String message = getMessage(key);
+
+        if (message == null || message.isEmpty()) {
+            message = defaultMessage;
+        }
+
+        return applyColors(getPrefix() + message);
+    }
 }

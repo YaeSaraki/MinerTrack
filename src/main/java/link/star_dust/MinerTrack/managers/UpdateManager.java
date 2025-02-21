@@ -43,17 +43,25 @@ public class UpdateManager {
     }
 
     public void checkForUpdates(CommandSender sender) {
-    	latestVersion = getLatestVersionFromSpigot();
-    	
+        latestVersion = getLatestVersionFromSpigot();
+
         if (latestVersion == null) {
-            sendMessage(sender, "&8[&9&lMiner&c&lTrack&8]&r &cFailed to check for updates.");
+            String errorMessage = plugin.getLanguageManager().getPrefixedMessageWithDefault(
+                "update.check-failed",
+                "&cFailed to check for updates."
+            );
+            sendMessage(sender, errorMessage);
             return;
         }
 
-        if (isHasNewerVersion) {
+        if (isHasNewerVersion()) {
             sendUpdateMessage(sender, latestVersion);
         } else {
-            sendMessage(sender, "&8[&9&lMiner&c&lTrack&8]&r &2You are using the latest version.");
+            String upToDateMessage = plugin.getLanguageManager().getPrefixedMessageWithDefault(
+                "update.using-latest",
+                "&2You are using the latest version."
+            );
+            sendMessage(sender, upToDateMessage);
         }
     }
 
@@ -85,13 +93,27 @@ public class UpdateManager {
     private String updateMessage;
 
     private void sendUpdateMessage(CommandSender sender, String latestVersion) {
+        String messageKey;
         if (latestVersion.contains("-beta")) {
-            updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &eNew beta version " + latestVersion + " now available!";
-        } else if(latestVersion.contains("-alpha")) {
-        	updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &cNew alpha version " + latestVersion + " now available!";
+            messageKey = "update.beta-available";
+        } else if (latestVersion.contains("-alpha")) {
+            messageKey = "update.alpha-available";
         } else {
-            updateMessage = "&8[&9&lMiner&c&lTrack&8]&r &aNew stable version " + latestVersion + " now available!";
+            messageKey = "update.stable-available";
         }
+
+        String defaultMessage;
+        if (latestVersion.contains("-beta")) {
+            defaultMessage = "&eNew beta version %latest_version% now available!";
+        } else if (latestVersion.contains("-alpha")) {
+            defaultMessage = "&cNew alpha version %latest_version% now available!";
+        } else {
+            defaultMessage = "&aNew stable version %latest_version% now available!";
+        }
+
+        String updateMessage = plugin.getLanguageManager().getPrefixedMessageWithDefault(messageKey, defaultMessage)
+                .replace("%latest_version%", latestVersion);
+
         sendMessage(sender, updateMessage);
     }
     

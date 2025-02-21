@@ -11,14 +11,19 @@
 **/
 package link.star_dust.MinerTrack.commands;
 
+import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
 import link.star_dust.MinerTrack.managers.LanguageManager;
+
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+
+import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,7 +136,13 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
 
                     if (plugin.getConfigManager().isKickStrikeLightning()) {
-                        playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    	if (FoliaCheck.isFolia()) {
+                    			Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+                    				playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    		});
+                    	} else {
+                    		playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    	}
                     }
 
                     if (plugin.getLanguageManager().isKickBroadcastEnabled()) {

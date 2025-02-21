@@ -418,14 +418,15 @@ public class MiningListener implements Listener {
         }
         return blockCount;
     }
-
+    
+    
+    private int totalTurns = 0;
+    private int branchCount = 0;
+    private int yChanges = 0;
+    
     private boolean isSmoothPath(List<Location> path) {
         if (path.size() < 2) return true;
-
-        int totalTurns = 0;
-        int branchCount = 0;
-        int yChanges = 0;
-
+        
         int turnThreshold = plugin.getConfigManager().getTurnCountThreshold();
         int branchThreshold = plugin.getConfigManager().getBranchCountThreshold();
         int yChangeThreshold = plugin.getConfigManager().getYChangeThreshold();
@@ -632,6 +633,10 @@ public class MiningListener implements Listener {
                 miningPath.remove(playerId); // 清除路径
                 minedVeinCount.remove(playerId); // 清除矿脉计数
                 vlZeroTimestamp.remove(playerId); // 清除时间戳
+                
+                totalTurns = 0;  // 移除转向计数
+                branchCount = 0; // 移除分支计数
+                yChanges = 0;    // 移除y坐标变化计数
 
                 // plugin.getLogger().info("Path reset for player: " + playerId + " due to VL=0 and timeout.");
             }
