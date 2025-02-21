@@ -95,7 +95,7 @@ If you encounter any issues or have suggestions for new features, feel free to r
 
 **Pull Requset: https://github.com/At87668/MinerTrack/pulls**
 
-**View Wiki: https://minertrack.pages.dev/**
+**Visit Wiki: https://minertrack.pages.dev/wiki/**
 
 **Join Discord: https://discord.gg/MzTea2W9cb**
 
