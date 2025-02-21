@@ -90,7 +90,7 @@ public class LanguageManager {
     }
 
     private String getMessage(String path) {
-        return languageConfig.getString(path, "&7[&cMinerTrack&7]");
+        return languageConfig.getString(path);
     }
 
     public String applyColors(String message) {
