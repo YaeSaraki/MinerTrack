@@ -449,7 +449,7 @@ public class MiningListener implements Listener {
                 }
 
                 // 检查Y轴的变化
-                if (Math.abs(currentLocation.getY() - lastLocation.getY()) > 1) {
+                if (Math.abs(currentLocation.getY() - lastLocation.getY()) > plugin.getConfigManager().getYPosChangeThresholdAddRequired()) {
                     yChanges++;
                 }
 

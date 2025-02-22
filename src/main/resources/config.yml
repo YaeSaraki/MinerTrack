@@ -34,7 +34,7 @@ disable_bypass_permission: false
 DiscordWebHook:
   enable: false
   WebHookURL: ''
-  vl-required: 4
+  vl-required: 4 # If a player's violation level is greater than this value, an alert is sent.
   vl-add-message:
     color: 0xFF5733
     title: "X-Ray Alert"
@@ -99,9 +99,10 @@ xray:
   veinCountThreshold: 3
   
   path-detection:
-    turn-count-threshold: 10 # Maximum number of turns threshold
-    branch-count-threshold: 6 # Maximum number of branches
-    y-change-threshold: 4 # maximum Y-axis change threshold
+    turn-count-threshold: 10           # Maximum number of turns threshold
+    branch-count-threshold: 6          # Maximum number of branches
+    y-change-threshold: 4              # Maximum Y-axis change threshold
+    y-change-threshold-add-required: 3 # If y pos transformation exceeds this value, the threshold is increased
 
   # Natural Detection
   natural-detection:

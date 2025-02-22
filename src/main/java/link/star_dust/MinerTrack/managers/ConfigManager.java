@@ -83,6 +83,7 @@ public class ConfigManager {
     		    "xray.path-detection.turn-count-threshold",
     		    "xray.path-detection.branch-count-threshold",
     		    "xray.path-detection.y-change-threshold",
+    		    "xray.path-detection.y-change-threshold-add-required",
     		    "xray.natural-detection",
     		    "xray.natural-detection.enable",
     		    "xray.natural-detection.cave",
@@ -305,6 +306,10 @@ public class ConfigManager {
 	public int WebHookVLRequired() {
         return config.getInt("DiscordWebHook.vl-required");
     }
+
+	public int getYPosChangeThresholdAddRequired() {
+		return config.getInt("xray.path-detection.y-change-threshold-add-required", 3);
+	}
 }
 
 

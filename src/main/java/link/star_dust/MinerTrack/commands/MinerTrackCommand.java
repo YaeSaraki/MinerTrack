@@ -138,12 +138,18 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     if (plugin.getConfigManager().isKickStrikeLightning()) {
                     	if (FoliaCheck.isFolia()) {
                     			Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
-                    				playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    				try {
+                    				    playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                    				} catch (Exception e){
+                    					plugin.getLogger().severe("Failed to strike lightning effect on Folia: " + e.getMessage());
+                    				}
                     		});
                     	} else {
                     		playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
                     	}
                     }
+                    
+                    plugin.getNotifier().kickPlayer(playerToKick, reason);
 
                     if (plugin.getLanguageManager().isKickBroadcastEnabled()) {
                         String kickMessage = plugin.getLanguageManager().getPrefixedMessage("kick-format")
@@ -151,8 +157,6 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                             .replace("%reason%", reason);
                         plugin.getServer().broadcastMessage(kickMessage);
                     }
-
-                    plugin.getNotifier().kickPlayer(playerToKick, reason);
 
                 } else {
                     sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("player-not-found")
