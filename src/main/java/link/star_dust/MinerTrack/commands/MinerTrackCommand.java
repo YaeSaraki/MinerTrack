@@ -148,8 +148,6 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     		playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
                     	}
                     }
-                    
-                    plugin.getNotifier().kickPlayer(playerToKick, reason);
 
                     if (plugin.getLanguageManager().isKickBroadcastEnabled()) {
                         String kickMessage = plugin.getLanguageManager().getPrefixedMessage("kick-format")
@@ -157,6 +155,8 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                             .replace("%reason%", reason);
                         plugin.getServer().broadcastMessage(kickMessage);
                     }
+                    
+                    plugin.getNotifier().kickPlayer(playerToKick, reason);
 
                 } else {
                     sender.sendMessage(plugin.getLanguageManager().getPrefixedMessage("player-not-found")
