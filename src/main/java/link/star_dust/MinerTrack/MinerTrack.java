@@ -34,6 +34,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.Listener;
 import org.json.JSONObject;
 
 import link.star_dust.MinerTrack.managers.ConfigManager;
@@ -44,7 +45,7 @@ import link.star_dust.MinerTrack.listeners.MiningDetectionExtension;
 import link.star_dust.MinerTrack.listeners.MiningListener;
 import link.star_dust.MinerTrack.commands.*;
 
-public class MinerTrack extends JavaPlugin {
+public class MinerTrack extends JavaPlugin implements Listener {
     private ConfigManager configManager;
     private LanguageManager languageManager;
     private ViolationManager violationManager;
@@ -95,11 +96,11 @@ public class MinerTrack extends JavaPlugin {
         getServer().getConsoleSender().sendMessage(applyColors("&a&oThanks for your use!"));
         getServer().getConsoleSender().sendMessage(applyColors("&8-----------------------------------------"));
         
-        if (getConfigManager().updateCheck()) {
+        /*if (getConfigManager().updateCheck()) {
             checkForUpdates(null);
       	} else {
       		return;
-      	}
+      	}*/
     }
     
     @EventHandler
@@ -123,6 +124,7 @@ public class MinerTrack extends JavaPlugin {
     }
 
     private void registerListeners() {
+		Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(new MiningListener(this), this);
     }
 
