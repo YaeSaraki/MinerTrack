@@ -1,8 +1,8 @@
 ---
-name: BUG Report
+name: BUG Report (Folia)
 about: If you want to report a bug, select this.
 title: "[Minecraft Version] [Issue Title]"
-labels: "❌BUG"
+labels: "❌BUG, \U0001F343Folia"
 assignees: ''
 
 ---

@@ -1,8 +1,8 @@
 ---
-name: BUG报告
+name: BUG报告 (Folia)
 about: 如果你想报告一个BUG, 选择这个
 title: "### [Minecraft版本] [问题标题]"
-labels: "❌BUG"
+labels: "❌BUG, \U0001F343Folia"
 assignees: ''
 
 ---
