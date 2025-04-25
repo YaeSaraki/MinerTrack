@@ -136,17 +136,25 @@ public class MinerTrackCommand implements CommandExecutor, TabCompleter {
                     String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
 
                     if (plugin.getConfigManager().isKickStrikeLightning()) {
-                    	if (FoliaCheck.isFolia()) {
-                    			Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
-                    				try {
-                    				    playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
-                    				} catch (Exception e){
-                    					plugin.getLogger().severe("Failed to strike lightning effect on Folia: " + e.getMessage());
-                    				}
-                    		});
-                    	} else {
-                    		playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
-                    	}
+                        if (FoliaCheck.isFolia()) {
+                            // Use Folia's region-based scheduler to execute the task safely
+                            Bukkit.getRegionScheduler().execute(plugin, playerToKick.getLocation(), () -> {
+                                try {
+                                    playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                                } catch (Exception e) {
+                                    plugin.getLogger().severe("Failed to strike lightning effect on Folia: " + e.getMessage());
+                                    e.printStackTrace(); // Log the full stack trace for debugging
+                                }
+                            });
+                        } else {
+                            // Non-Folia servers can execute the task directly
+                            try {
+                                playerToKick.getWorld().strikeLightningEffect(playerToKick.getLocation());
+                            } catch (Exception e) {
+                                plugin.getLogger().severe("Failed to strike lightning effect: " + e.getMessage());
+                                e.printStackTrace(); // Log the full stack trace for debugging
+                            }
+                        }
                     }
 
                     if (plugin.getLanguageManager().isKickBroadcastEnabled()) {
