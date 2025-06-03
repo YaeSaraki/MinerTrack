@@ -47,6 +47,7 @@ DiscordWebHook:
       - 'Mined Veins: %mined_veins%'
       - ''
       - 'Pos: %pos_x% %pos_y% %pos_z%'
+  # If the custom Json format below is enabled, this Json body format will be used to send to the WebHookURL configured above
   custom-json:
     enable: false
     format: |
