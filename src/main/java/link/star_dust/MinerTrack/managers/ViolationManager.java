@@ -14,6 +14,7 @@ package link.star_dust.MinerTrack.managers;
 import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
 import link.star_dust.MinerTrack.hooks.DiscordWebHook;
+import link.star_dust.MinerTrack.hooks.CustomJsonWebHook;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -338,6 +339,26 @@ public class ViolationManager {
 
     	// 获取 WebHook 配置项
     	String webHookURL = plugin.getConfigManager().WebHookURL();
+    	
+    	// 如果启用了自定义JSON格式
+    	if (plugin.getConfigManager().isCustomJsonEnabled()) {
+    		Map<String, String> placeholders = new HashMap<>();
+    		placeholders.put("player", player.getName());
+    		placeholders.put("player_uuid", player.getUniqueId().toString());
+    		placeholders.put("player_vl", String.valueOf(getViolationLevel(player)));
+    		placeholders.put("ore_type", oreType);
+    		placeholders.put("mined_veins", String.valueOf(minedVeins));
+    		placeholders.put("ore_count", String.valueOf(ore_count));
+    		placeholders.put("pos_x", String.valueOf(location.getBlockX()));
+    		placeholders.put("pos_y", String.valueOf(location.getBlockY()));
+    		placeholders.put("pos_z", String.valueOf(location.getBlockZ()));
+    		
+    		CustomJsonWebHook customWebHook = new CustomJsonWebHook(plugin, webHookURL, plugin.getConfigManager().getCustomJsonFormat());
+    		customWebHook.sendMessage(placeholders);
+    		return;
+    	}
+
+    	// 原有的Discord WebHook逻辑
     	String title = plugin.getConfigManager().WebHookTitle();
     	List<String> textTemplate = plugin.getConfigManager().WebHookText();
     	int color = plugin.getConfigManager().WebHookColor();

@@ -23,6 +23,7 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.bukkit.Bukkit;
 
 public class DiscordWebHook {
 
@@ -54,29 +55,31 @@ public class DiscordWebHook {
     }
 
     /**
-     * Sends a payload to the Discord WebHook.
+     * Sends a payload to the Discord WebHook asynchronously.
      *
      * @param payload The payload to send.
      */
     private void send(Payload payload) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost post = new HttpPost(webHookUrl);
-            post.setHeader("Content-Type", "application/json");
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost post = new HttpPost(webHookUrl);
+                post.setHeader("Content-Type", "application/json");
 
-            String jsonPayload = gson.toJson(payload);
-            post.setEntity(new StringEntity(jsonPayload));
+                String jsonPayload = gson.toJson(payload);
+                post.setEntity(new StringEntity(jsonPayload));
 
-            try (CloseableHttpResponse response = httpClient.execute(post)) {
-                int statusCode = response.getCode();
-                if (statusCode != 200 && statusCode != 204) {
-                    plugin.getLogger().warning("Failed to send message to Discord WebHook. Response Code: " + statusCode);
+                try (CloseableHttpResponse response = httpClient.execute(post)) {
+                    int statusCode = response.getCode();
+                    if (statusCode != 200 && statusCode != 204) {
+                        plugin.getLogger().warning("Failed to send message to Discord WebHook. Response Code: " + statusCode);
+                    }
                 }
-            }
 
-        } catch (Exception e) {
-            plugin.getLogger().severe("Error while sending message to Discord WebHook: " + e.getMessage());
-            e.printStackTrace();
-        }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error while sending message to Discord WebHook: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
     /**

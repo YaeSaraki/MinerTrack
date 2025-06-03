@@ -307,6 +307,14 @@ public class ConfigManager {
         return config.getInt("DiscordWebHook.vl-required");
     }
 
+    public boolean isCustomJsonEnabled() {
+        return config.getBoolean("DiscordWebHook.custom-json.enable", false);
+    }
+
+    public String getCustomJsonFormat() {
+        return config.getString("DiscordWebHook.custom-json.format", "");
+    }
+
 	public int getYPosChangeThresholdAddRequired() {
 		return config.getInt("xray.path-detection.y-change-threshold-add-required", 3);
 	}

@@ -10,7 +10,7 @@
 
 [![Support Server](https://img.shields.io/discord/1302190990639235122.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/MzTea2W9cb)
 
-
+[English](./README.md) | [简体中文](./README-zh_hans.md)
 
 ![Image](./Images/Overview.png)
 
