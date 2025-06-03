@@ -47,6 +47,30 @@ DiscordWebHook:
       - 'Mined Veins: %mined_veins%'
       - ''
       - 'Pos: %pos_x% %pos_y% %pos_z%'
+  custom-json:
+    enable: false
+    format: |
+      {
+        "title": "X-Ray Alert",
+        "data": {
+          "player": {
+            "name": "%player%",
+            "uuid": "%player_uuid%",
+            "violation_level": %player_vl%
+          },
+          "mining": {
+            "ore_type": "%ore_type%",
+            "ore_count": %ore_count%,
+            "mined_veins": %mined_veins%
+          },
+          "location": {
+            "x": %pos_x%,
+            "y": %pos_y%,
+            "z": %pos_z%
+          },
+          "timestamp": "%timestamp%"
+        }
+      }
 
 #############################################################################################################################
 ##        ##   This plugin in order to capture XRayer quickly, might generate false positives for players who are lucky!   ##
