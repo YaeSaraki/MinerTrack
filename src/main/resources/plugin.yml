@@ -1,8 +1,8 @@
 name: MinerTrack
-version: 1.7.0
+version: 1.7.1
 main: link.star_dust.MinerTrack.MinerTrack
 authors: [Author87668]
-contributors: []
+contributors: [Author87668, Zhang12334]
 website: https://modrinth.com/plugin/minertrack
 api-version: 1.18
 folia-supported: true
