@@ -36,12 +36,12 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew shadowJar
     
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v4
-        with:
-          name: MinerTrack Dev Build
-          path: ./build/libs/*.jar
-          retention-days: 90
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v4
+      with:
+        name: MinerTrack Dev Build
+        path: ./build/libs/*.jar
+        retention-days: 90
 
     #- name: Coveralls Check
     #  uses: coverallsapp/github-action@v2
