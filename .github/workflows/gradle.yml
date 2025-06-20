@@ -9,9 +9,9 @@ name: MinerTrack Dev Build CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 
 jobs:
   build:
@@ -39,7 +39,7 @@ jobs:
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v4
       with:
-        name: MinerTrack Dev Build
+        name: MinerTrack-dev-${{ github.sha }}
         path: ./build/libs/*.jar
         retention-days: 90
 
