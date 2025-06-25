@@ -38,6 +38,8 @@ Compared to other AntiXray solutions:
 - MinerTrack has been tested on servers with about 20 simultaneous players, with very few false positives (*default config*).
 - MinerTrack is free.
 
+**And, if you are afraid of players bypassing `RaytraceAntiXray`, you can use it together with this plugin to complement each other!**
+
 ![Image](./Images/Features.png)
 
 - Detect XRayer
