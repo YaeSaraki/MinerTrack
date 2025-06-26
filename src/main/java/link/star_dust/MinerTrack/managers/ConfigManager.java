@@ -91,6 +91,13 @@ public class ConfigManager {
     		    "xray.natural-detection.cave.CaveAirMultiplier",
     		    "xray.natural-detection.cave.detection-range",
     		    "xray.natural-detection.cave.check_skip_vl",
+    		    "xray.natural-detection.cave.air-monitor",
+    		    "xray.natural-detection.cave.air-monitor.enable",
+    		    "xray.natural-detection.cave.air-monitor.min-path-length",
+    		    "xray.natural-detection.cave.air-monitor.air-ratio-threshold",
+    		    "xray.natural-detection.cave.air-monitor.violation-increase",
+    		    "xray.natural-detection.cave.air-monitor.violation-threshold",
+    		    "xray.natural-detection.cave.air-monitor.remove-time",
     		    "xray.natural-detection.sea",
     		    "xray.natural-detection.sea.check-running-water",
     		    "xray.natural-detection.sea.water-threshold",
@@ -317,6 +324,10 @@ public class ConfigManager {
 
 	public int getYPosChangeThresholdAddRequired() {
 		return config.getInt("xray.path-detection.y-change-threshold-add-required", 3);
+	}
+
+	public int AirMonitorVLT() {
+		return plugin.getConfig().getInt("xray.natural-detection.cave.air-monitor.violation-threshold", 5);
 	}
 }
 

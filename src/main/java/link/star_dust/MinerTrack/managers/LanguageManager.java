@@ -37,7 +37,7 @@ public class LanguageManager {
         loadLanguageFile();
     }
 
-    private void loadLanguageFile() {
+    public void loadLanguageFile() {
         // Save default language file if it doesn't exist
         if (!languageFile.exists()) {
             plugin.saveResource("language.yml", false);

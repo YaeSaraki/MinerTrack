@@ -49,6 +49,8 @@ public class MiningListener implements Listener {
     private final Map<UUID, Set<Location>> placedOres = new HashMap<>();
     private final Map<Location, Long> explosionExposedOres = new HashMap<>();
     private final Map<UUID, Long> vlZeroTimestamp = new HashMap<>();
+    private final Map<UUID, Integer> airViolationLevel = new HashMap<>();
+    private final Map<UUID, Long> lastAirViolationTime = new HashMap<>();
     //private final MiningDetectionExtension ex;
     
     public MiningListener(MinerTrack plugin) {
@@ -64,6 +66,7 @@ public class MiningListener implements Listener {
                     return;
                 }
                 checkAndResetPaths();
+                cleanUpAirViolations(); // 清除空气检测记录
                 cleanupExpiredPaths();
                 cleanupExpiredExplosions();
                 cleanupExpiredPlacedBlocks();
@@ -303,7 +306,8 @@ public class MiningListener implements Listener {
         }
 
         // 检测新矿脉
-        if (!isInNaturalEnvironment(blockLocation) && !isSmoothPath(path)) {
+        checkForArtificialAir(player, path);
+        if (!isInNaturalEnvironment(player, blockLocation, path) && !isSmoothPath(path)) {
         	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
         		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
         		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
@@ -471,7 +475,7 @@ public class MiningListener implements Listener {
         return totalTurns < turnThreshold && branchCount < branchThreshold && yChanges < yChangeThreshold;
     }
     
-    private boolean isInNaturalEnvironment(Location location) {
+    private boolean isInNaturalEnvironment(Player player, Location location, List<Location> path) {
     	if (!plugin.getConfigManager().getNaturalEnable()) return false;
     	
         int airCount = 0;
@@ -517,14 +521,14 @@ public class MiningListener implements Listener {
             }
         }
 
-        if (airCount > airThreshold && plugin.getConfigManager().isCaveSkipVL()) return true;
+		if (airCount > airThreshold && plugin.getConfigManager().isCaveSkipVL() && airViolationLevel.getOrDefault(player, 0) < plugin.getConfigManager().AirMonitorVLT()) return true;
         if (waterCount > waterThreshold && plugin.getConfigManager().isSeaSkipVL()) return true;
         if (lavaCount > lavaThreshold && plugin.getConfigManager().isLavaSeaSkipVL()) return true;
 
         return false;
     }
 
-    private boolean isWaterStill(World world, int x, int y, int z) {
+	private boolean isWaterStill(World world, int x, int y, int z) {
         Block block = world.getBlockAt(x, y, z);
         if (block.getType() == Material.WATER) {
             return block.getBlockData() instanceof Levelled && ((Levelled) block.getBlockData()).getLevel() == 0;
@@ -609,6 +613,35 @@ public class MiningListener implements Listener {
         return false;
     }
     
+    private void checkForArtificialAir(Player player, List<Location> path) {
+        if (!plugin.getConfig().getBoolean("xray.natural-detection.cave.air-monitor.enable", true)) {
+            return;
+        }
+
+        int minPathLength = plugin.getConfig().getInt("xray.natural-detection.cave.air-monitor.min-path-length", 10);
+        if (path.size() < minPathLength) {
+            return;
+        }
+
+        int airBlockCount = 0;
+        for (Location loc : path) {
+            Material type = loc.getBlock().getType();
+            if (type == Material.AIR || type == Material.CAVE_AIR) {
+                airBlockCount++;
+            }
+        }
+
+        double airRatio = (double) airBlockCount / path.size();
+        double threshold = plugin.getConfig().getDouble("xray.natural-detection.cave.air-monitor.air-ratio-threshold", 0.3);
+
+        if (airRatio > threshold) {
+            UUID playerId = player.getUniqueId();
+            int increase = plugin.getConfig().getInt("xray.natural-detection.cave.air-monitor.violation-increase", 1);
+            airViolationLevel.put(playerId, airViolationLevel.getOrDefault(playerId, 0) + increase);
+            lastAirViolationTime.put(playerId, System.currentTimeMillis());
+        }
+    }
+    
     private void cleanupExpiredPlacedBlocks() {
         long currentTime = System.currentTimeMillis();
         long expirationTime = plugin.getConfig().getInt("xray.trace_remove", 15) * 60 * 1000L;
@@ -619,6 +652,24 @@ public class MiningListener implements Listener {
         }));
 
         //plugin.getLogger().info("清理了过期的放置方块记录。当前记录总数: " + placedOres.size());
+    }
+    
+    private void cleanUpAirViolations() {
+        long now = System.currentTimeMillis();
+        long decayTime = plugin.getConfig().getLong("xray.natural-detection.cave.air-monitor.remove-time", 20) * 60 * 1000L;
+
+        List<UUID> toRemove = new ArrayList<>();
+
+        for (Map.Entry<UUID, Long> entry : lastAirViolationTime.entrySet()) {
+            if (now - entry.getValue() > decayTime) {
+                toRemove.add(entry.getKey());
+            }
+        }
+
+        for (UUID uuid : toRemove) {
+            airViolationLevel.remove(uuid);
+            lastAirViolationTime.remove(uuid);
+        }
     }
     
     private void checkAndResetPaths() {
