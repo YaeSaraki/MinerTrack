@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Consumer;
+import java.util.function.Consumer;
 
 import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -63,7 +63,7 @@ public class ViolationManager {
                 Object scheduler = schedulerClass.getMethod("getGlobalRegionScheduler").invoke(null);
                 scheduler.getClass().getMethod("runAtFixedRate",
                     Plugin.class,
-                    Class.forName("org.bukkit.util.Consumer"),
+                    Class.forName("java.util.function.Consumer"),
                     long.class,
                     long.class
                 ).invoke(scheduler, plugin, (Consumer<Object>) task -> {

@@ -36,7 +36,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Consumer;
+import java.util.function.Consumer;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -66,7 +66,7 @@ public class MiningListener implements Listener {
                 Object scheduler = schedulerClass.getMethod("getGlobalRegionScheduler").invoke(null);
                 scheduler.getClass().getMethod("runAtFixedRate",
                     Plugin.class,
-                    Class.forName("org.bukkit.util.Consumer"),
+                    Class.forName("java.util.function.Consumer"),
                     long.class,
                     long.class
                 ).invoke(scheduler, plugin, (Consumer<Object>) task -> {
