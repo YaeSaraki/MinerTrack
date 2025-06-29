@@ -1,13 +1,13 @@
 ---
 name: BUG Report (Folia)
 about: If you want to report a bug, select this.
-title: "[Minecraft Version] [Issue Title]"
+title: "[Minecraft Version] Issue Title"
 labels: "❌BUG, \U0001F343Folia"
 assignees: ''
 
 ---
 
-### [Minecraft Version] [Issue Title]
+### [Minecraft Version] Issue Title
 
 - [x] Tested on Folia
 - [x] Tested with this plugin only

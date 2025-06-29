@@ -1,13 +1,13 @@
 ---
 name: BUG报告 (Folia)
 about: 如果你想报告一个BUG, 选择这个
-title: "### [Minecraft版本] [问题标题]"
+title: "[Minecraft版本] 问题标题"
 labels: "❌BUG, \U0001F343Folia"
 assignees: ''
 
 ---
 
-### [Minecraft版本] [问题标题]
+### [Minecraft版本] 问题标题
 
 - [x] 已在Folia测试
 - [x] 已在仅有此插件的情况下测试

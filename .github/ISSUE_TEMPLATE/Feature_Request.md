@@ -1,13 +1,13 @@
 ---
 name: Feature Request
 about: Suggest an idea for this plugin.
-title: "[Request Title]"
+title: "Request Title"
 labels: "➕Enhancement"
 assignees: ''
 
 ---
 
-### [Request Title]
+### Request Title
 
 #### Wanted Feature
 

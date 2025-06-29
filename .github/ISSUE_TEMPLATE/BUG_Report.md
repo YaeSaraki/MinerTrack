@@ -1,13 +1,13 @@
 ---
 name: BUG Report
 about: If you want to report a bug, select this.
-title: "[Minecraft Version] [Issue Title]"
+title: "[Minecraft Version] Issue Title"
 labels: "❌BUG"
 assignees: ''
 
 ---
 
-### [Minecraft Version] [Issue Title]
+### [Minecraft Version] Issue Title
 
 - [x] Tested on Paper
 - [x] Tested with this plugin only
