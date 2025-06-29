@@ -35,6 +35,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -59,51 +61,45 @@ public class MiningListener implements Listener {
         int interval = 20 * 60; // Scheduling interval (unit: tick)
 
         if (FoliaCheck.isFolia()) {
-            // Folia scheduling logic
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
-                if (!plugin.isEnabled()) {
-                    task.cancel();
-                    return;
-                }
-                checkAndResetPaths();
-                cleanUpAirViolations(); // 清除空气检测记录
-                cleanupExpiredPaths();
-                cleanupExpiredExplosions();
-                cleanupExpiredPlacedBlocks();
-            }, interval, interval);
-        } else {
-            // Use reflection to call the Spigot scheduling logic
             try {
-                Class<?> schedulerClass = Bukkit.getScheduler().getClass();
-                java.lang.reflect.Method runTaskTimer = schedulerClass.getMethod(
-                    "runTaskTimer",
+                Class<?> schedulerClass = Class.forName("org.bukkit.Bukkit");
+                Object scheduler = schedulerClass.getMethod("getGlobalRegionScheduler").invoke(null);
+                scheduler.getClass().getMethod("runAtFixedRate",
                     Plugin.class,
-                    Runnable.class,
+                    Class.forName("org.bukkit.util.Consumer"),
                     long.class,
                     long.class
-                );
-
-                Object[] params = {
-                    plugin,
-                    (Runnable) () -> {
+                ).invoke(scheduler, plugin, (Consumer<Object>) task -> {
+                    try {
+                        if (!plugin.isEnabled()) {
+                            task.getClass().getMethod("cancel").invoke(task);
+                            return;
+                        }
                         checkAndResetPaths();
+                        cleanUpAirViolations();
                         cleanupExpiredPaths();
                         cleanupExpiredExplosions();
                         cleanupExpiredPlacedBlocks();
-                    },
-                    (long) interval,
-                    (long) interval
-                };
-
-                runTaskTimer.invoke(
-                    Bukkit.getScheduler(),
-                    params
-                );
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, interval, interval);
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to schedule task on Spigot: " + e.getMessage());
                 e.printStackTrace();
             }
+        } else {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    checkAndResetPaths();
+                    cleanUpAirViolations();
+                    cleanupExpiredPaths();
+                    cleanupExpiredExplosions();
+                    cleanupExpiredPlacedBlocks();
+                }
+            }.runTaskTimer(plugin, interval, interval);
         }
+
     }
 
     @EventHandler

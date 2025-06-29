@@ -19,6 +19,7 @@ import link.star_dust.MinerTrack.hooks.CustomJsonWebHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Consumer;
 
 import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -56,18 +58,39 @@ public class ViolationManager {
         int interval = 20 * 60; // Scheduling interval (unit: tick)
 
         if (FoliaCheck.isFolia()) {
-            // Folia scheduling logic
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
-                if (!plugin.isEnabled()) {
-                    task.cancel();
-                    return;
-                }
-                processVLDecayTasks();
-            }, interval, interval);
+            try {
+                Class<?> schedulerClass = Class.forName("org.bukkit.Bukkit");
+                Object scheduler = schedulerClass.getMethod("getGlobalRegionScheduler").invoke(null);
+                scheduler.getClass().getMethod("runAtFixedRate",
+                    Plugin.class,
+                    Class.forName("org.bukkit.util.Consumer"),
+                    long.class,
+                    long.class
+                ).invoke(scheduler, plugin, (Consumer<Object>) task -> {
+                    try {
+                        if (!plugin.isEnabled()) {
+                            task.getClass().getMethod("cancel").invoke(task);
+                            return;
+                        }
+                        processVLDecayTasks();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, interval, interval);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
-        	Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-                processVLDecayTasks();
-            }, interval, interval);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                	if (!plugin.isEnabled()) {
+                        cancel();
+                        return;
+                    }
+                	processVLDecayTasks();
+                }
+            }.runTaskTimer(plugin, interval, interval);
         }
     }
     
