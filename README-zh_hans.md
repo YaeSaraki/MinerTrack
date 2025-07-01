@@ -38,6 +38,16 @@
 - 已在 20 人在线服务器中测试，几乎没有误判（默认配置）
 - 完全免费
 
+看看用户们怎么说:
+
+<details>
+<summary>评价</summary>
+  
+![Assessment 1](https://cdn.modrinth.com/data/O3VQnhG2/images/732fb5912dc2ae4049631d1acd2e71acb5a58227.png)
+
+![Assessment 2](https://cdn.modrinth.com/data/O3VQnhG2/images/8c9ccc951e5baf6a4181154f499a0fab30749a74.png)
+</details>
+
 ![Image](./Images/Features.png)
 
 * 检测使用 Xray 的玩家
