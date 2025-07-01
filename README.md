@@ -40,7 +40,7 @@ Compared to other AntiXray solutions:
 
 - MinerTrack is free.
 
-See what users have to say:
+Look what users have to say:
 
 <details>
 <summary>Assessments</summary>
