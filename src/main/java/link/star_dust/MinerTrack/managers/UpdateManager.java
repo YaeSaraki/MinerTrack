@@ -66,24 +66,28 @@ public class UpdateManager {
     }
 
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
-    	latestVersion = getLatestVersionFromSpigot();
-        String latest = latestVersion.split("-")[0];
-        String current = currentVersion.split("-")[0];
+    	if (latestVersion == null) {
+    		return false;
+    	} else {
+    		latestVersion = getLatestVersionFromSpigot();
+    		String latest = latestVersion.split("-")[0];
+    		String current = currentVersion.split("-")[0];
 
-        String[] latestParts = latest.split("\\.");
-        String[] currentParts = current.split("\\.");
+    		String[] latestParts = latest.split("\\.");
+    		String[] currentParts = current.split("\\.");
 
-        for (int i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
-            int latestPart = i < latestParts.length ? Integer.parseInt(latestParts[i]) : 0;
-            int currentPart = i < currentParts.length ? Integer.parseInt(currentParts[i]) : 0;
-            if (latestPart > currentPart) {
-                return true;
-            } else if (latestPart < currentPart) {
-                return false;
-            }
-        }
-        
-        return false;
+    		for (int i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
+    			int latestPart = i < latestParts.length ? Integer.parseInt(latestParts[i]) : 0;
+    			int currentPart = i < currentParts.length ? Integer.parseInt(currentParts[i]) : 0;
+    			if (latestPart > currentPart) {
+    				return true;
+    			} else if (latestPart < currentPart) {
+    				return false;
+    			}
+    		}
+    	}
+
+    	return false;
     }
     
     public boolean isHasNewerVersion() {
