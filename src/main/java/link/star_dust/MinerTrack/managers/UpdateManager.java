@@ -31,8 +31,12 @@ public class UpdateManager {
 
     public UpdateManager(MinerTrack plugin) {
         this.plugin = plugin;
+        if (plugin.getConfigManager().updateCheck()) {
+        	latestVersion = getLatestVersionFromSpigot();
+      	} else {
+      		latestVersion = "0.0.0";
+      	}
         
-        latestVersion = getLatestVersionFromSpigot();
         currentVersion = plugin.getDescription().getVersion();
         
         if(isNewerVersion(latestVersion, currentVersion)) {
@@ -66,8 +70,12 @@ public class UpdateManager {
     }
 
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
-    	latestVersion = getLatestVersionFromSpigot();
     	if (latestVersion == null) {
+    		String errorMessage = plugin.getLanguageManager().getPrefixedMessageWithDefault(
+                    "update.check-failed",
+                    "&cFailed to check for updates."
+                );
+    		sendMessage(null, errorMessage);
     		return false;
     	} else {
     		String latest = latestVersion.split("-")[0];
