@@ -66,10 +66,10 @@ public class UpdateManager {
     }
 
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
+    	latestVersion = getLatestVersionFromSpigot();
     	if (latestVersion == null) {
     		return false;
     	} else {
-    		latestVersion = getLatestVersionFromSpigot();
     		String latest = latestVersion.split("-")[0];
     		String current = currentVersion.split("-")[0];
 
