@@ -13,6 +13,10 @@ package link.star_dust.MinerTrack.listeners;
 
 import link.star_dust.MinerTrack.FoliaCheck;
 import link.star_dust.MinerTrack.MinerTrack;
+import link.star_dust.MinerTrack.Notifier;
+import link.star_dust.MinerTrack.GlobalOreBreakNotifier;
+import link.star_dust.MinerTrack.managers.ConfigManager;
+import link.star_dust.MinerTrack.managers.LanguageManager;
 import link.star_dust.MinerTrack.managers.ViolationManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -43,6 +47,8 @@ import java.util.*;
 
 public class MiningListener implements Listener {
     private final MinerTrack plugin;
+
+    private GlobalOreBreakNotifier globalOreBreakNotifier;
     private final Map<UUID, Map<String, List<Location>>> miningPath = new HashMap<>();
     private final Map<UUID, Long> lastMiningTime = new HashMap<>();
     private final Map<UUID, Integer> violationLevel = new HashMap<>();
@@ -57,7 +63,8 @@ public class MiningListener implements Listener {
     
     public MiningListener(MinerTrack plugin) {
         this.plugin = plugin;
-		//this.ex = plugin.miningDetectionExtension;
+        globalOreBreakNotifier = new GlobalOreBreakNotifier(plugin);
+        //this.ex = plugin.miningDetectionExtension;
         int interval = 20 * 60; // Scheduling interval (unit: tick)
 
         if (FoliaCheck.isFolia()) {
@@ -303,19 +310,30 @@ public class MiningListener implements Listener {
 
         // 检测新矿脉
         checkForArtificialAir(player, path);
-        if (!isInNaturalEnvironment(player, blockLocation, path) && !isSmoothPath(path)) {
-        	if (isNewVein(playerId, worldName, blockLocation, blockType)) {
-        		minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
-        		lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
-        		lastVeinLocation.get(playerId).put(worldName, blockLocation);
-        		
-        		int veinCount = minedVeinCount.getOrDefault(playerId, 0);
-        		if (veinCount >= plugin.getConfigManager().getVeinCountThreshold()) {
-        		    analyzeMiningPath(player, path, blockType, countVeinBlocks(blockLocation, blockType), blockLocation);
-        		}
-        	}
+
+        boolean newVein = isNewVein(playerId, worldName, blockLocation, blockType);
+        if (!newVein) return;
+
+        int veinBlocks = countVeinBlocks(blockLocation, blockType);
+        boolean inNaturalEnvironment = isInNaturalEnvironment(player, blockLocation, path);
+
+        if (plugin.getConfig().getBoolean("xray.global-ore-break-notifier", true)) {
+            globalOreBreakNotifier.buildAndSendNotifierMessageWith(player, blockType, veinBlocks);
+        }
+
+        if (!inNaturalEnvironment && !isSmoothPath(path)) {
+            minedVeinCount.put(playerId, minedVeinCount.getOrDefault(playerId, 0) + 1);
+            lastVeinLocation.putIfAbsent(playerId, new HashMap<>());
+            lastVeinLocation.get(playerId).put(worldName, blockLocation);
+
+            int veinCount = minedVeinCount.getOrDefault(playerId, 0);
+            if (veinCount >= plugin.getConfigManager().getVeinCountThreshold()) {
+                analyzeMiningPath(player, path, blockType, veinBlocks, blockLocation);
+            }
         }
     }
+
+
 
     private void cleanupExpiredPaths() {
         long now = System.currentTimeMillis();
@@ -351,7 +369,9 @@ public class MiningListener implements Listener {
         Queue<Location> toVisit = new LinkedList<>();
         toVisit.add(loc1);
 
-        while (!toVisit.isEmpty()) {
+        int max = 0;
+        while (!toVisit.isEmpty() && max <= 9) {
+            ++max;
             Location current = toVisit.poll();
             if (visited.contains(current)) continue;
             visited.add(current);
@@ -390,7 +410,9 @@ public class MiningListener implements Listener {
 
         int blockCount = 0;
 
-        while (!toVisit.isEmpty()) {
+        int max = 0;
+        while (!toVisit.isEmpty() && max <= 500) {
+            ++max;
             Location current = toVisit.poll();
             if (visited.contains(current)) continue;
             visited.add(current);

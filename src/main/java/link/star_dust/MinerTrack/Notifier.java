@@ -37,7 +37,7 @@ public class Notifier {
 
     public void sendNotifyMessage(String messageContent) {
         // 定义前缀并添加颜色代码
-        String prefix = ChatColor.translateAlternateColorCodes('&', "&8[&9&lMiner&c&lTrack&8]&r ");
+        String prefix = ChatColor.translateAlternateColorCodes('&', "&8&9&lMiner&c&lTrack&8]&r ");
         String formattedMessage = prefix + ChatColor.translateAlternateColorCodes('&', messageContent);
         
         // 向拥有权限的玩家发送消息

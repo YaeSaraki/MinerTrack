@@ -233,6 +233,8 @@ public class ConfigManager {
     public boolean getNaturalEnable() {
         return config.getBoolean("xray.natural-detection.enable", true);
     }
+
+    public boolean getGlobalOreBreakNotifier() { return config.getBoolean("xray.global-ore-break-notifier", true);}
     
     public int getCaveBypassAirThreshold() {
         return config.getInt("xray.natural-detection.cave.air-threshold", 14);

@@ -17,7 +17,7 @@
 #####################################################################################
 
 # You can define the message prefix here
-prefix: '&8[&9&lMiner&c&lTrack&8]&r '
+prefix: '&9&lMiner&c&lTrack&8&r '
 
 # Define the announcement message after the player is kicked out by anti-xraying
 kick-format: '&b%player% &7kicked out of the server for allegedly using X-Ray! &8(%reason%)'
@@ -68,3 +68,5 @@ update:
   stable-available: '&aNew stable version %latest_version% now available!'
   using-latest: '&2You are using the latest version.'
   check-failed: '&cFailed to check for updates.'
+
+ore-break-notification: '<MineCat> &c%player% &7 发现了 &6%ore% &f X &6 %veinblocks%&7 喵～'
